@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>GymCoach JM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #c8f55a;
+  --accent2: #7df7c4;
+  --warn: #f5a623;
+  --danger: #f55a5a;
+  --text: #e8e8f0;
+  --text2: #9090a8;
+  --text3: #5a5a70;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Inter', sans-serif;
+  --display: 'Syne', sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── SETUP SCREEN ── */
+#setup-screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  gap: 2rem;
+}
+
+.setup-logo {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+}
+
+.setup-logo span { color: var(--text2); font-weight: 400; }
+
+.setup-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.setup-card h2 {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.setup-card p {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+.setup-card a { color: var(--accent); text-decoration: none; }
+
+.field-label {
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+
+.api-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.api-input:focus { border-color: var(--accent); }
+.api-input::placeholder { color: var(--text3); }
+
+.btn-primary {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-primary:active { transform: scale(0.98); opacity: 0.85; }
+
+.setup-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: rgba(200,245,90,0.06);
+  border: 1px solid rgba(200,245,90,0.15);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--accent);
+  line-height: 1.5;
+}
+
+/* ── MAIN APP ── */
+#app { display: none; flex-direction: column; min-height: 100dvh; }
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(16px);
+  z-index: 50;
+}
+
+.header-logo {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* Tab nav */
+.tab-nav {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 57px;
+  z-index: 40;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.75rem 0.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Panels */
+.panel { display: none; flex-direction: column; flex: 1; }
+.panel.active { display: flex; }
+
+/* ── CHAT PANEL ── */
+#panel-chat {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+}
+#panel-chat.active { display: flex; }
+
+.chat-banner {
+  margin: 1rem 1.25rem 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.banner-day {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-badge {
+  font-family: var(--display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(200,245,90,0.12);
+  color: var(--accent);
+}
+
+.banner-date {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text3);
+}
+
+.banner-desc {
+  font-size: 0.82rem;
+  color: var(--text2);
+}
+
+.dorsal-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(245,166,35,0.08);
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--warn);
+  font-family: var(--mono);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scroll-behavior: smooth;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  animation: fadeUp 0.25s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.msg-label {
+  font-size: 0.65rem;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  padding: 0 0.25rem;
+}
+
+.msg-bubble {
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.user .msg-bubble {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 16px 16px 4px 16px;
+  margin-left: 1.5rem;
+}
+
+.msg.assistant .msg-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 16px 16px 16px 4px;
+}
+
+.msg.assistant .msg-label { color: var(--accent2); }
+
+.msg.thinking .msg-bubble {
+  color: var(--text3);
+  font-style: italic;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+/* Formateo de respuestas del coach */
+.msg-bubble strong { color: var(--accent); font-weight: 500; }
+.msg-bubble em { color: var(--warn); font-style: normal; }
+.msg-bubble .risk-bajo { color: var(--accent2); }
+.msg-bubble .risk-mod { color: var(--warn); }
+.msg-bubble .risk-ver { color: var(--danger); }
+
+.input-area {
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: rgba(10,10,15,0.95);
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.quick-btns {
+  padding: 0 1.25rem 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.quick-btns::-webkit-scrollbar { display: none; }
+
+.quick-btn {
+  flex-shrink: 0;
+  padding: 0.4rem 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--text2);
+  font-size: 0.78rem;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.quick-btn:active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+
+.chat-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  transition: border-color 0.2s;
+  line-height: 1.4;
+}
+
+.chat-input:focus { border-color: var(--accent); }
+.chat-input::placeholder { color: var(--text3); }
+
+.send-btn {
+  width: 40px; height: 40px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.send-btn:active { transform: scale(0.93); opacity: 0.8; }
+.send-btn svg { width: 18px; height: 18px; }
+
+/* ── REGISTRO PANEL ── */
+#panel-registro {
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.registro-header {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.registro-header span { color: var(--accent); }
+
+.ejercicio-form {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ejercicio-form select,
+.ejercicio-form input[type="text"],
+.ejercicio-form input[type="number"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ejercicio-form select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a5a70' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.875rem center; padding-right: 2.5rem; }
+
+.sets-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sets-grid .field-label { grid-column: 1/-1; }
+
+.set-row {
+  display: contents;
+}
+
+.set-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--surface2);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text3);
+}
+
+.btn-add-set {
+  padding: 0.6rem;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  color: var(--text3);
+  font-size: 0.8rem;
+  cursor: pointer;
+  grid-column: 1/-1;
+  font-family: var(--mono);
+  transition: all 0.2s;
+}
+.btn-add-set:active { color: var(--accent); border-color: var(--accent); }
+
+.btn-guardar {
+  padding: 0.875rem;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-guardar:active { opacity: 0.8; }
+
+/* Historial de hoy */
+.historial-hoy {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.historial-hoy-header {
+  padding: 0.875rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+
+.ejercicio-card {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ejercicio-card:last-child { border-bottom: none; }
+
+.ej-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ej-sets {
+  font-size: 0.78rem;
+  color: var(--text2);
+  margin-top: 0.25rem;
+  font-family: var(--mono);
+}
+
+.ej-peso-max {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.empty-state {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text3);
+  font-size: 0.82rem;
+  font-family: var(--mono);
+}
+
+/* ── PROGRESIÓN PANEL ── */
+#panel-progresion {
+  padding: 1rem 1.25rem;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.prog-header {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.prog-header span { color: var(--accent); }
+
+.ej-selector {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a5a70' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2.5rem;
+}
+
+.chart-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem;
+}
+
+.chart-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  margin-bottom: 1rem;
+}
+
+canvas#progChart { width: 100% !important; height: 180px !important; }
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+}
+
+.stat-value {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-unit {
+  font-size: 0.72rem;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+.sesiones-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sesion-item {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sesion-item:last-child { border-bottom: none; }
+
+.sesion-fecha {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text3);
+}
+
+.sesion-dia {
+  font-size: 0.82rem;
+  color: var(--text);
+  margin-top: 0.2rem;
+}
+
+.sesion-ejercicios {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--accent2);
+}
+
+/* Cerrar sesión btn */
+.btn-cerrar-sesion {
+  margin: 0 1.25rem 0.5rem;
+  padding: 0.75rem;
+  background: rgba(200,245,90,0.08);
+  border: 1px solid rgba(200,245,90,0.25);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  width: calc(100% - 2.5rem);
+  display: none;
+  transition: background 0.2s;
+}
+.btn-cerrar-sesion.visible { display: block; }
+.btn-cerrar-sesion:active { background: rgba(200,245,90,0.15); }
+
+/* Backup banner */
+.backup-banner {
+  margin: 0.5rem 1.25rem;
+  padding: 0.6rem 0.875rem;
+  background: rgba(245,166,35,0.08);
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.backup-banner span { font-size: 0.75rem; color: var(--warn); font-family: var(--mono); }
+.backup-btn { padding: 0.3rem 0.75rem; background: var(--warn); border: none; border-radius: 6px; color: #0a0a0f; font-size: 0.72rem; font-family: var(--mono); font-weight: 500; cursor: pointer; white-space: nowrap; }
+
+/* Descanso info en coach */
+.descanso-card {
+  margin: 0 1.25rem 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: none;
+}
+.descanso-card.visible { display: block; }
+.descanso-titulo { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 0.4rem; }
+.descanso-items { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.descanso-item { display: flex; flex-direction: column; gap: 0.1rem; }
+.descanso-label { font-size: 0.7rem; color: var(--text3); font-family: var(--mono); }
+.descanso-valor { font-size: 0.9rem; font-family: var(--display); font-weight: 700; color: var(--accent); }
+
+/* Notification toast */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent);
+  color: #0a0a0f;
+  padding: 0.7rem 1.25rem;
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════ -->
+<!-- SETUP SCREEN                       -->
+<!-- ══════════════════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-logo">Gym<span>Coach</span></div>
+
+  <div class="setup-card">
+    <h2>Configuración inicial</h2>
+    <p>Necesitás tu API key de Google Gemini para activar tu coach biomecánico personal. Es gratuita y no vence.</p>
+    <p>Obtené la tuya en <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> → "Crear clave de API"</p>
+
+    <div>
+      <div class="field-label">API Key de Gemini</div>
+      <input class="api-input" type="password" id="api-key-input" placeholder="AIzaSy..." autocomplete="off" />
+    </div>
+
+    <div class="setup-note">
+      🔒 Tu clave se guarda solo en este dispositivo. Nunca sale a ningún servidor externo.
+    </div>
+
+    <button class="btn-primary" onclick="activarApp()">Activar GymCoach →</button>
+
+    <div style="text-align:center;margin-top:0.25rem">
+      <label style="display:inline-flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.8rem;color:var(--text3);font-family:var(--mono)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar datos históricos (gymcoach_datos.json)
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarDatos(this)">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- MAIN APP                           -->
+<!-- ══════════════════════════════════ -->
+<div id="app">
+  <header class="app-header">
+    <div class="header-logo">GymCoach JM</div>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="header-status">
+        <div class="status-dot"></div>
+        <span id="header-day-label">DÍA A</span>
+      </div>
+      <button onclick="mostrarConfig()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;opacity:0.5">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Modal configuración -->
+  <div id="modal-config" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:1.5rem">
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:420px;display:flex;flex-direction:column;gap:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:var(--display);font-weight:700;font-size:1rem">Configuración</span>
+        <button onclick="cerrarConfig()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem">✕</button>
+      </div>
+      <div>
+        <div class="field-label">API Key de Gemini</div>
+        <input class="api-input" type="password" id="config-api-key" placeholder="AIzaSy..." style="margin-top:0.4rem">
+      </div>
+      <button class="btn-primary" onclick="guardarConfig()">Guardar y recargar</button>
+      <button onclick="exportarHistorial()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer">Exportar historial ahora</button>
+    </div>
+  </div>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('chat')">Coach</button>
+    <button class="tab-btn" onclick="switchTab('registro')">Registro</button>
+    <button class="tab-btn" onclick="switchTab('progresion')">Progresión</button>
+  </nav>
+
+  <!-- ── CHAT PANEL ── -->
+  <div id="panel-chat" class="panel active">
+    <div class="chat-banner">
+      <div class="banner-day">
+        <span class="day-badge" id="banner-day">DÍA A</span>
+        <span class="banner-date" id="banner-date"></span>
+      </div>
+      <div class="banner-desc" id="banner-desc">Pierna / Hombros / Core</div>
+      <div class="dorsal-alert" id="dorsal-alert">
+        ⚠ Dorsal: FASE ACTIVA — protocolo de protección en curso
+      </div>
+    </div>
+
+    <div class="quick-btns" id="quick-btns">
+      <button class="quick-btn" onclick="sendQuick('Voy a entrenar')">🏋️ Voy a entrenar</button>
+      <button class="quick-btn" onclick="sendQuick('Ok, listo')">✓ Listo</button>
+      <button class="quick-btn" onclick="sendQuick('Terminé la sesión')">✅ Terminé</button>
+      <button class="quick-btn" onclick="sendQuick('Siento molestia leve en el dorsal')">⚠ Molestia dorsal</button>
+      <button class="quick-btn" onclick="sendQuick('Cero dolor confirmado en dorsal')">💪 Cero dolor</button>
+      <button class="quick-btn" onclick="sendQuick('No pude mantener la excéntrica de 3s')">⏱ Perdí tempo</button>
+    </div>
+
+    <!-- Card de descanso (se muestra durante sesión) -->
+    <div class="descanso-card" id="descanso-card">
+      <div class="descanso-titulo">Protocolo de descanso activo</div>
+      <div class="descanso-items">
+        <div class="descanso-item">
+          <span class="descanso-label">Entre series reales</span>
+          <span class="descanso-valor" id="desc-series">2–3 min</span>
+        </div>
+        <div class="descanso-item">
+          <span class="descanso-label">Compuestos pesados</span>
+          <span class="descanso-valor">3 min</span>
+        </div>
+        <div class="descanso-item">
+          <span class="descanso-label">Aproximaciones</span>
+          <span class="descanso-valor">60 seg</span>
+        </div>
+        <div class="descanso-item">
+          <span class="descanso-label">Aislamiento</span>
+          <span class="descanso-valor">1–2 min</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón cerrar sesión (aparece cuando hay sesión activa) -->
+    <button class="btn-cerrar-sesion" id="btn-cerrar-sesion" onclick="cerrarSesion()">
+      ✅ Cerrar sesión y guardar reporte clínico
+    </button>
+
+    <!-- Backup banner -->
+    <div class="backup-banner" id="backup-banner" style="display:none">
+      <span>⚠ Sin backup reciente</span>
+      <button class="backup-btn" onclick="exportarHistorial()">Exportar ahora</button>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="input-area">
+      <textarea class="chat-input" id="chat-input" placeholder="Escribí a tu coach..." rows="1"
+        onkeydown="handleKeydown(event)"
+        oninput="autoResize(this)"></textarea>
+      <button class="send-btn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── REGISTRO PANEL ── -->
+  <div id="panel-registro" class="panel">
+    <div class="registro-header">Registrar <span>ejercicio</span></div>
+
+    <div class="ejercicio-form">
+      <div>
+        <div class="field-label">Día de entrenamiento</div>
+        <select id="reg-dia">
+          <option value="A">Día A — Pierna / Hombros / Core</option>
+          <option value="B">Día B — Espalda / Bíceps (Rehab)</option>
+          <option value="C">Día C — Pecho / Tríceps / Hombro lat</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="field-label">Ejercicio</div>
+        <select id="reg-ejercicio">
+          <optgroup label="Día A — Pierna / Hombros / Core">
+            <option>Prensa de piernas</option>
+            <option>Extensión de cuádriceps</option>
+            <option>Curl de isquiotibiales</option>
+            <option>Press militar (mancuernas)</option>
+            <option>Elevaciones laterales</option>
+            <option>Plancha isométrica</option>
+            <option>Pallof press</option>
+          </optgroup>
+          <optgroup label="Día B — Espalda / Bíceps (Rehab)">
+            <option>Retracción escapular isométrica</option>
+            <option>Remo en banda (ligero)</option>
+            <option>Curl predicador (70%)</option>
+            <option>Curl mancuerna sentado</option>
+            <option>Activación serrato anterior</option>
+          </optgroup>
+          <optgroup label="Día C — Pecho / Tríceps / Hombro lat">
+            <option>Press plano libre</option>
+            <option>Press inclinado mancuernas</option>
+            <option>Aperturas mancuernas</option>
+            <option>Fondos tríceps</option>
+            <option>Extensión tríceps polea</option>
+            <option>Elevaciones laterales</option>
+          </optgroup>
+          <option value="__custom__">+ Otro ejercicio...</option>
+        </select>
+      </div>
+
+      <div id="custom-ej-wrap" style="display:none">
+        <div class="field-label">Nombre del ejercicio</div>
+        <input type="text" id="custom-ej" placeholder="Ej: Sentadilla goblet">
+      </div>
+
+      <div>
+        <div class="field-label">Sets completados</div>
+        <div class="sets-grid" id="sets-container">
+          <!-- sets generados dinámicamente -->
+        </div>
+        <button class="btn-add-set" onclick="addSet()">+ Agregar set</button>
+      </div>
+
+      <div>
+        <div class="field-label">Notas de la sesión (opcional)</div>
+        <input type="text" id="reg-notas" placeholder="Ej: Mantuve excéntrica, sin dolor">
+      </div>
+
+      <button class="btn-guardar" onclick="guardarEjercicio()">Guardar ejercicio</button>
+    </div>
+
+    <div class="historial-hoy">
+      <div class="historial-hoy-header">Registrado hoy</div>
+      <div id="historial-hoy-lista">
+        <div class="empty-state">No hay ejercicios registrados hoy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROGRESIÓN PANEL ── -->
+  <div id="panel-progresion" class="panel">
+    <div class="prog-header">Tu <span>progresión</span></div>
+
+    <div>
+      <div class="field-label">Ejercicio</div>
+      <select class="ej-selector" id="prog-selector" onchange="renderProgresion()">
+        <!-- opciones dinámicas -->
+      </select>
+    </div>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Máximo</div>
+        <div class="stat-value" id="stat-max">—</div>
+        <div class="stat-unit">kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sesiones</div>
+        <div class="stat-value" id="stat-sesiones">—</div>
+        <div class="stat-unit">registros</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tendencia</div>
+        <div class="stat-value" id="stat-tendencia">—</div>
+        <div class="stat-unit">kg/sem</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">Peso máximo por sesión (kg)</div>
+      <canvas id="progChart"></canvas>
+    </div>
+
+    <div class="sesiones-list" id="sesiones-recientes">
+      <div class="empty-state">Sin datos aún. Empezá a registrar tus ejercicios.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ═══════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════
+let apiKey = '';
+let conversationHistory = [];
+let chartInstance = null;
+
+// Rotación de días
+const DIAS = { A: 'Pierna / Hombros / Core', B: 'Espalda / Bíceps (Rehab activa)', C: 'Pecho / Tríceps / Hombro lateral' };
+
+// ═══════════════════════════════════════
+// KNOWLEDGE DIGEST + PROMPT SISTEMA
+// ═══════════════════════════════════════
+function buildSystemPrompt() {
+  const contextoPrevio = localStorage.getItem('gymcoach_contexto_previo') || '';
+  const diasEntrenados = JSON.parse(localStorage.getItem('gymcoach_dias_count') || '{"A":0,"B":0,"C":0}');
+  const ultimoDay = localStorage.getItem('gymcoach_ultimo_dia') || 'C';
+  const diaActual = calcularDiaActual(ultimoDay);
+
+  return `${PROMPT_V2}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KNOWLEDGE DIGEST — BASE CIENTÍFICA ACTIVA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Esta sección contiene los principios destilados de la biblioteca clínica del atleta (105 documentos). Aplicar siempre. Prioridad: evidencia sobre convención.
+
+── HIPERTROFIA (Schoenfeld et al.) ──
+• Rango óptimo para hipertrofia: 6–20 rep con RIR 1–3. Rangos altos (15–30) son igualmente efectivos si se llega cerca del fallo. Rangos bajos (1–5) priorizan fuerza neuronal.
+• Volumen efectivo: 10–20 series semanales por grupo muscular. Atleta avanzado puede tolerar extremo superior. Señal de sobrevolumen: pérdida de rendimiento sesión a sesión.
+• Tempo: excéntrica controlada (3–4s) maximiza tensión mecánica y daño muscular. El componente concéntrico puede ser explosivo. Isométrico al final del ROM aumenta activación.
+• Descanso entre series: 2–3 min para ejercicios compuestos, 1–2 min para aislamiento. Reducir descanso no mejora hipertrofia y perjudica la carga absoluta.
+• Frecuencia: 2x/semana por grupo muscular es el umbral mínimo para maximizar síntesis proteica. Sistema rotativo A/B/C de JM cumple este criterio.
+• Progresión: sobrecarga progresiva es el driver principal. Doblar rep antes de subir peso (método doble progresión). Incrementos de 2.5 kg en ejercicios de aislamiento, 5 kg en compuestos.
+
+── ATLETA MASTER (>40 años, literatura específica) ──
+• Recuperación post-excéntrica: atletas master (40–50 años) muestran recuperación más lenta (48–72h vs 24–36h en jóvenes) tras trabajo excéntrico pesado de tren inferior. Ajustar rotación.
+• Testosterona y entrenamiento: series de 4–6 rep al 85–90% 1RM con descansos largos producen mayor respuesta anabólica aguda que series de alto rep. Combinar con volumen moderado.
+• Tejido conectivo: tasa de síntesis de colágeno es significativamente más lenta. Los tendones y ligamentos requieren más tiempo de adaptación que el músculo. Progresar carga más gradualmente (no más de 10% semanal en ejercicios que carguen tendones).
+• Sarcopenia prevention: mínimo 1.6g proteína/kg/día. Entrenamiento de fuerza es la intervención más efectiva conocida contra la pérdida de masa muscular por edad.
+• Microbiota y síntesis muscular (papers 2024): diversidad del microbioma intestinal correlaciona positivamente con masa muscular y respuesta anabólica. La inflamación crónica de bajo grado (común en sedentarios >40) inhibe mTOR. El entrenamiento de fuerza reduce marcadores inflamatorios.
+
+── BIOMECÁNICA CLÍNICA (McGill et al.) ──
+• Core stability: el objetivo no es fuerza, es control motor. Ejercicios como Pallof press, bird-dog y plancha enseñan a crear tensión sin movimiento (stiffness) protegiendo la columna lumbar.
+• Bracing vs. hollowing: el bracing (co-contracción de toda la musculatura del core) es superior para protección espinal bajo carga. No hollow (succión del abdomen) durante ejercicios con carga.
+• Espina neutra: mantener curvatura lumbar natural bajo carga. La flexión lumbar bajo carga (rounding) es el principal mecanismo de hernia discal. En prensa de piernas: no permitir retroversión pélvica excesiva al final del recorrido.
+• Cadena posterior: dorsal ancho actúa como estabilizador activo en TODOS los ejercicios con carga en las manos (incluso press plano). Monitorear en fase de lesión activa.
+
+── RECUPERACIÓN Y PERIODIZACIÓN ──
+• Supercompensación: el rendimiento óptimo ocurre 48–72h post-sesión intensa. La app debe sugerir días de descanso activo si el contexto indica fatiga acumulada.
+• Indicadores de sobreentrenamiento a monitorear activamente: (1) pérdida de tempo excéntrico, (2) reducción de carga sin causa aparente, (3) RPE subjetivo >9 sin correlación con carga, (4) sueño deteriorado.
+• Periodización ondulante diaria (DUP): variar rep ranges entre sesiones del mismo grupo muscular. Ej. Día A semana 1: 8–10 rep. Día A semana 2: 12–15 rep. Maximiza adaptaciones.
+
+── REGLAS DE PRESCRIPCIÓN PARA JM ATENCIO ──
+• Cargas históricas de referencia: Prensa piernas 112.5 kg · Press plano 55 kg · Extensión cuádriceps 50 kg
+• Estado dorsal: ACTIVO hasta "cero dolor confirmado" explícito
+• Factor de carga actual (ejercicios sin riesgo dorsal): 95% de histórico
+• Factor de carga (riesgo moderado): 75–80% de histórico
+• Protocolo Día B: Rehabilitación activa. Sin jalones ni remos pesados.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONTEXTO DE SESIÓN PREVIA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${contextoPrevio || 'Sin sesiones previas registradas. Primera sesión del sistema.'}
+
+DÍA ACTUAL CALCULADO: ${diaActual}
+SESIONES COMPLETADAS — A: ${diasEntrenados.A} · B: ${diasEntrenados.B} · C: ${diasEntrenados.C}
+`;
+}
+
+const PROMPT_V2 = `PROMPT v2.0 — COACH BIOMECÁNICO CLÍNICO
+Caso: Juan Martín Atencio | Versión: 2.0
+
+0. META-INSTRUCCIÓN Y ROL (CRÍTICO)
+Actúa como Coach Biomecánico Clínico y Especialista en Rehabilitación Funcional. No eres un animador de gimnasio. Combinás biomecánica clínica, fisiología del tejido conectivo y programación de fuerza para atletas con historial de lesión activa.
+
+Regla de Oro: No asesorarás sobre nutrición, dietas ni suplementación a menos que se solicite explícitamente. Enfoque 100% mecánico, clínico y de ejecución. Cero condescendencia. Cero frases motivacionales. Comunicación con precisión fisiológica.
+
+1. DIAGNÓSTICO CLÍNICO
+Atleta: Juan Martín Atencio, 46 años, 95 kg.
+Estado Estructural CRÍTICO: Fase de remodelación tisular activa por microtrauma (tirón) en dorsal ancho izquierdo (10/04/2026). Estado ACTIVO hasta reporte explícito "cero dolor confirmado".
+Estatus: Fase de alto rendimiento con supercompensación.
+
+2. REGLAS ESTRICTAS DE PROTECCIÓN BIOMECÁNICA
+2.1 Mientras dorsal ACTIVO, están PROHIBIDOS: jalones, remos con carga isotónica pesada, estiramientos profundos del dorsal, ejercicios con co-contracción isométrica intensa del dorsal.
+2.2 Escala de carga: Sin riesgo dorsal → 95% histórico. Riesgo moderado → 75-80% histórico. Contraindicado → sustituir.
+2.3 Día B = Rehabilitación Activa: solo isométrico bajo, curl predicador 70%, movilidad manguito rotador.
+2.4 En TODOS los ejercicios de tren inferior recordar: "Agarre neutro, no comprimas el dorsal por reflejo."
+2.5 Excéntrica estricta 3s. Descansos 2-3 min innegociables.
+
+3. FLUJO DE SESIÓN
+Cuando el atleta diga "Voy a entrenar":
+- Indicar qué Día toca y listar ejercicios del día
+- Presentar SOLO el Ejercicio 1 con formato exacto:
+
+Ejercicio N°[X] de [Total]:
+────────────────────────────
+Nombre:
+Series x Repeticiones:
+Peso sugerido:
+Descanso:
+Nivel de riesgo dorsal: [BAJO / MODERADO / VERIFICAR]
+Sugerencia biomecánica:
+⚠️ REVISIÓN DORSAL (si aplica):
+
+Esperar feedback antes de continuar. Si reporta dolor → acción clínica inmediata. Si riesgo de co-contracción dorsal → advertir ANTES con etiqueta ⚠️ REVISIÓN DORSAL.
+
+4. CIERRE DE SESIÓN
+Al terminar, generar Reporte Final con: ejercicios completados/modificados, análisis de sobrecarga progresiva, estado SNC (tempo, carga, RPE), y párrafo clínico de protección de contexto para próxima sesión.`;
+
+// ═══════════════════════════════════════
+// CÁLCULO DE DÍA
+// ═══════════════════════════════════════
+function calcularDiaActual(ultimoDia) {
+  const secuencia = ['A', 'B', 'C'];
+  const idx = secuencia.indexOf(ultimoDia);
+  return secuencia[(idx + 1) % 3];
+}
+
+function getDiaActual() {
+  const ultimoDia = localStorage.getItem('gymcoach_ultimo_dia') || 'C';
+  return calcularDiaActual(ultimoDia);
+}
+
+function updateDayUI() {
+  const dia = getDiaActual();
+  document.getElementById('banner-day').textContent = `DÍA ${dia}`;
+  document.getElementById('banner-desc').textContent = DIAS[dia];
+  document.getElementById('header-day-label').textContent = `DÍA ${dia}`;
+  const fecha = new Date().toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('banner-date').textContent = fecha;
+  document.getElementById('reg-dia').value = dia;
+}
+
+// ═══════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════
+function activarApp() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key || !key.startsWith('AIza')) {
+    showToast('API key inválida. Debe empezar con AIza...');
+    return;
+  }
+  apiKey = key;
+  localStorage.setItem('gymcoach_api_key', key);
+  iniciarApp();
+}
+
+// ═══════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════
+function addMessage(role, content) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const label = document.createElement('div');
+  label.className = 'msg-label';
+  label.textContent = role === 'user' ? 'Vos' : 'Coach';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = formatearMensaje(content);
+
+  div.appendChild(label);
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function formatearMensaje(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/⚠️(.*)/g, '<em>⚠️$1</em>')
+    .replace(/BAJO/g, '<span class="risk-bajo">BAJO</span>')
+    .replace(/MODERADO/g, '<span class="risk-mod">MODERADO</span>')
+    .replace(/VERIFICAR/g, '<span class="risk-ver">VERIFICAR</span>');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !apiKey) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  addMessage('user', text);
+
+  conversationHistory.push({ role: 'user', parts: [{ text }] });
+
+  // Thinking indicator
+  const msgs = document.getElementById('messages');
+  const thinking = document.createElement('div');
+  thinking.className = 'msg assistant thinking';
+  thinking.innerHTML = '<div class="msg-label">Coach</div><div class="msg-bubble">Analizando...</div>';
+  msgs.appendChild(thinking);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const systemPrompt = buildSystemPrompt();
+
+    const contentsWithSystem = [
+      { role: "user", parts: [{ text: systemPrompt + "\n\nConfirmá que entendiste respondiendo SOLO: Sistema cargado." }] },
+      { role: "model", parts: [{ text: "Sistema cargado." }] },
+      ...conversationHistory
+    ];
+
+    const body = {
+      contents: contentsWithSystem,
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
+    };
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    );
+
+    const data = await res.json();
+    thinking.remove();
+
+    if (data.candidates && data.candidates[0]) {
+      const reply = data.candidates[0].content.parts[0].text;
+      conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+      addMessage('assistant', reply);
+
+      // Activar modo sesión
+      if (text.toLowerCase().includes('voy a entrenar')) activarSesion();
+
+      // Guardar contexto al cerrar
+      if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine') || text.toLowerCase().includes('cerrar sesión')) {
+        checkAndSaveContext(reply);
+      }
+    } else if (data.error) {
+      addMessage('assistant', `Error de API: ${data.error.message}\n\nVerificá tu API key en Configuración.`);
+    }
+  } catch(e) {
+    thinking.remove();
+    addMessage('assistant', `Error de conexión: ${e.message}`);
+  }
+}
+
+function sendQuick(text) {
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+let sesionActiva = false;
+
+function activarSesion() {
+  sesionActiva = true;
+  document.getElementById('btn-cerrar-sesion').classList.add('visible');
+  document.getElementById('descanso-card').classList.add('visible');
+}
+
+function cerrarSesion() {
+  const prompt = 'Terminé la sesión. Generá el reporte final clínico completo con todas las secciones del protocolo.';
+  document.getElementById('chat-input').value = prompt;
+  sendMessage();
+  document.getElementById('btn-cerrar-sesion').classList.remove('visible');
+  document.getElementById('descanso-card').classList.remove('visible');
+  sesionActiva = false;
+}
+
+function checkAndSaveContext(replyText) {
+  const match = replyText.match(/Sesión[\s\S]{0,1200}próxima sesión/i);
+  const toSave = match ? match[0] : replyText.slice(0, 800);
+  const fecha = new Date().toLocaleDateString('es-AR');
+  localStorage.setItem('gymcoach_contexto_previo', `[${fecha}] ${toSave}`);
+  localStorage.setItem('gymcoach_ultimo_backup', Date.now().toString());
+
+  const dia = getDiaActual();
+  const counts = JSON.parse(localStorage.getItem('gymcoach_dias_count') || '{"A":0,"B":0,"C":0}');
+  counts[dia] = (counts[dia] || 0) + 1;
+  localStorage.setItem('gymcoach_dias_count', JSON.stringify(counts));
+  localStorage.setItem('gymcoach_ultimo_dia', dia);
+  updateDayUI();
+
+  // Auto-exportar historial como backup
+  exportarHistorial(true);
+  showToast('Reporte guardado + backup exportado ✓');
+}
+
+function exportarHistorial(silencioso = false) {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const contexto = localStorage.getItem('gymcoach_contexto_previo') || '';
+  const data = {
+    version: '1.1',
+    atleta: 'Juan Martín Atencio',
+    exportado: new Date().toISOString().split('T')[0],
+    contexto_previo: contexto,
+    historial
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gymcoach_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  localStorage.setItem('gymcoach_ultimo_backup', Date.now().toString());
+  document.getElementById('backup-banner').style.display = 'none';
+  if (!silencioso) showToast('Historial exportado ✓');
+}
+
+function mostrarConfig() {
+  document.getElementById('config-api-key').value = apiKey;
+  document.getElementById('modal-config').style.display = 'flex';
+}
+function cerrarConfig() {
+  document.getElementById('modal-config').style.display = 'none';
+}
+function guardarConfig() {
+  const key = document.getElementById('config-api-key').value.trim();
+  if (!key || !key.startsWith('AIza')) { showToast('API key inválida'); return; }
+  apiKey = key;
+  localStorage.setItem('gymcoach_api_key', key);
+  cerrarConfig();
+  showToast('API key actualizada ✓');
+}
+
+function checkBackupAlert() {
+  const ultimo = parseInt(localStorage.getItem('gymcoach_ultimo_backup') || '0');
+  const diasSinBackup = (Date.now() - ultimo) / (1000 * 60 * 60 * 24);
+  if (diasSinBackup > 3 || !ultimo) {
+    document.getElementById('backup-banner').style.display = 'flex';
+  }
+}
+
+
+
+// ═══════════════════════════════════════
+// REGISTRO
+// ═══════════════════════════════════════
+let setsData = [];
+
+function renderSetsUI(n) {
+  setsData = Array.from({length: n}, (_,i) => ({reps: '', kg: ''}));
+  const container = document.getElementById('sets-container');
+
+  const labels = `<div class="field-label" style="grid-column:1/-1;margin-bottom:0">Repeticiones</div>
+    <div class="field-label" style="margin-bottom:0">Kg</div>
+    <div></div>`;
+
+  const rows = setsData.map((_, i) => `
+    <input type="number" inputmode="decimal" placeholder="Reps" style="grid-column:1;height:38px"
+      oninput="setsData[${i}].reps=this.value" value="${setsData[i].reps || ''}">
+    <input type="number" inputmode="decimal" step="0.5" placeholder="Kg" style="grid-column:2;height:38px"
+      oninput="setsData[${i}].kg=this.value" value="${setsData[i].kg || ''}">
+    <div class="set-num" style="grid-column:3">${i+1}</div>
+  `).join('');
+
+  container.innerHTML = labels + rows;
+}
+
+function addSet() {
+  renderSetsUI(setsData.length + 1);
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'reg-ejercicio') {
+    document.getElementById('custom-ej-wrap').style.display =
+      e.target.value === '__custom__' ? 'block' : 'none';
+  }
+});
+
+function guardarEjercicio() {
+  const ejercicioSelect = document.getElementById('reg-ejercicio').value;
+  const ejercicio = ejercicioSelect === '__custom__'
+    ? document.getElementById('custom-ej').value.trim()
+    : ejercicioSelect;
+
+  if (!ejercicio) { showToast('Seleccioná un ejercicio'); return; }
+
+  const sets = setsData.filter(s => s.reps && s.kg);
+  if (sets.length === 0) { showToast('Ingresá al menos 1 set completo'); return; }
+
+  const dia = document.getElementById('reg-dia').value;
+  const notas = document.getElementById('reg-notas').value;
+  const fecha = new Date().toISOString().split('T')[0];
+
+  const registro = { fecha, dia, ejercicio, sets, notas };
+
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  historial.push(registro);
+  localStorage.setItem('gymcoach_historial', JSON.stringify(historial));
+
+  document.getElementById('reg-notas').value = '';
+  renderSetsUI(3);
+  renderHistorialHoy();
+  actualizarSelectorProgresion();
+  renderProgresion();
+  showToast(`${ejercicio} guardado ✓`);
+}
+
+function renderHistorialHoy() {
+  const hoy = new Date().toISOString().split('T')[0];
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const hoyData = historial.filter(r => r.fecha === hoy);
+  const lista = document.getElementById('historial-hoy-lista');
+
+  if (hoyData.length === 0) {
+    lista.innerHTML = '<div class="empty-state">No hay ejercicios registrados hoy</div>';
+    return;
+  }
+
+  lista.innerHTML = hoyData.map(r => {
+    const maxKg = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
+    const setsStr = r.sets.map(s => `${s.reps}×${s.kg}kg`).join(' · ');
+    return `<div class="ejercicio-card">
+      <div>
+        <div class="ej-name">${r.ejercicio}</div>
+        <div class="ej-sets">${setsStr}</div>
+        ${r.notas ? `<div class="ej-sets" style="color:var(--text3);margin-top:2px">${r.notas}</div>` : ''}
+      </div>
+      <div class="ej-peso-max">${maxKg} kg</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// PROGRESIÓN
+// ═══════════════════════════════════════
+function actualizarSelectorProgresion() {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const ejercicios = [...new Set(historial.map(r => r.ejercicio))];
+  const sel = document.getElementById('prog-selector');
+  const prev = sel.value;
+  sel.innerHTML = ejercicios.length
+    ? ejercicios.map(e => `<option value="${e}">${e}</option>`).join('')
+    : '<option value="">Sin datos aún</option>';
+  if (prev && ejercicios.includes(prev)) sel.value = prev;
+}
+
+function renderProgresion() {
+  const ejercicio = document.getElementById('prog-selector').value;
+  if (!ejercicio) return;
+
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const datos = historial.filter(r => r.ejercicio === ejercicio);
+
+  if (datos.length === 0) {
+    document.getElementById('stat-max').textContent = '—';
+    document.getElementById('stat-sesiones').textContent = '—';
+    document.getElementById('stat-tendencia').textContent = '—';
+    return;
+  }
+
+  const porFecha = {};
+  datos.forEach(r => {
+    const max = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
+    if (!porFecha[r.fecha] || porFecha[r.fecha] < max) porFecha[r.fecha] = max;
+  });
+
+  const fechas = Object.keys(porFecha).sort();
+  const pesos = fechas.map(f => porFecha[f]);
+
+  const maxKg = Math.max(...pesos);
+  const sesiones = fechas.length;
+
+  let tendencia = 0;
+  if (pesos.length >= 2) {
+    const diff = pesos[pesos.length-1] - pesos[0];
+    const semanas = Math.max(1, (new Date(fechas[fechas.length-1]) - new Date(fechas[0])) / (7*86400000));
+    tendencia = parseFloat((diff / semanas).toFixed(1));
+  }
+
+  document.getElementById('stat-max').textContent = maxKg;
+  document.getElementById('stat-sesiones').textContent = sesiones;
+  document.getElementById('stat-tendencia').textContent = (tendencia > 0 ? '+' : '') + tendencia;
+
+  // Chart
+  const ctx = document.getElementById('progChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const labels = fechas.map(f => {
+    const d = new Date(f + 'T12:00:00');
+    return d.toLocaleDateString('es-AR', {day:'numeric', month:'short'});
+  });
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: pesos,
+        borderColor: '#c8f55a',
+        backgroundColor: 'rgba(200,245,90,0.06)',
+        borderWidth: 2,
+        pointBackgroundColor: '#c8f55a',
+        pointRadius: 4,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: '#12121a',
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        titleColor: '#9090a8',
+        bodyColor: '#c8f55a',
+        callbacks: { label: ctx => `${ctx.parsed.y} kg` }
+      }},
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5a5a70', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#5a5a70', font: { size: 11 }, callback: v => v+'kg' } }
+      }
+    }
+  });
+
+  // Sesiones recientes
+  const recientes = [...fechas].reverse().slice(0, 8);
+  document.getElementById('sesiones-recientes').innerHTML = recientes.map(fecha => {
+    const registrosDia = datos.filter(r => r.fecha === fecha);
+    const d = new Date(fecha + 'T12:00:00');
+    const diasStr = registrosDia[0]?.dia ? `Día ${registrosDia[0].dia}` : '';
+    return `<div class="sesion-item">
+      <div>
+        <div class="sesion-fecha">${d.toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'})}</div>
+        <div class="sesion-dia">${diasStr}</div>
+      </div>
+      <div class="sesion-ejercicios">${porFecha[fecha]} kg</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// UI UTILS
+// ═══════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabs = ['chat','registro','progresion'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.toggle('active', p.id === `panel-${tab}`);
+  });
+  if (tab === 'progresion') renderProgresion();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════
+// IMPORTACIÓN DE DATOS HISTÓRICOS
+// ═══════════════════════════════════════
+function importarDatos(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.historial || !Array.isArray(data.historial)) throw new Error("Formato inválido");
+      const existente = JSON.parse(localStorage.getItem("gymcoach_historial") || "[]");
+      const merged = [...existente, ...data.historial];
+      const seen = new Set();
+      const unique = merged.filter(r => {
+        const key = r.fecha+"|"+r.ejercicio+"|"+(r.sets[0]?.kg||"");
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      });
+      localStorage.setItem("gymcoach_historial", JSON.stringify(unique));
+      if (data.contexto_previo) localStorage.setItem("gymcoach_contexto_previo", data.contexto_previo);
+      showToast("✓ " + data.historial.length + " registros importados");
+      renderHistorialHoy(); actualizarSelectorProgresion(); renderProgresion();
+    } catch(err) { showToast("Error al leer el archivo JSON"); }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('load', () => {
+  const savedKey = localStorage.getItem('gymcoach_api_key');
+  if (savedKey) {
+    apiKey = savedKey;
+    iniciarApp();
+  }
+});
+
+function iniciarApp() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  updateDayUI();
+  renderSetsUI(3);
+  renderHistorialHoy();
+  actualizarSelectorProgresion();
+  renderProgresion();
+  checkBackupAlert();
+
+  const hora = new Date().getHours();
+  const saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const dia = getDiaActual();
+  addMessage('assistant', `${saludo}, Juan Martín. Sistema activado.\n\nContexto clínico cargado. Protocolo de protección dorsal activo.\n\nTe toca el **Día ${dia}** (${DIAS[dia]}).\n\nCuando estés listo para entrenar, decime "Voy a entrenar" y arrancamos.`);
+}
+</script>
+</body>
+</html>
