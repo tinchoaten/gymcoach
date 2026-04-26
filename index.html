@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GymCoach JM">
+<link rel="manifest" id="pwa-manifest">
 <title>GymCoach JM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -463,7 +466,7 @@ body {
 
 .sets-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr 1fr auto;
   gap: 0.5rem;
   align-items: center;
 }
@@ -564,6 +567,27 @@ body {
   text-align: right;
   white-space: nowrap;
 }
+
+.ej-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.btn-borrar-reg {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text3);
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.btn-borrar-reg:hover { color: var(--danger); }
 
 .empty-state {
   padding: 2rem 1rem;
@@ -727,6 +751,30 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
 .backup-banner span { font-size: 0.75rem; color: var(--warn); font-family: var(--mono); }
 .backup-btn { padding: 0.3rem 0.75rem; background: var(--warn); border: none; border-radius: 6px; color: #0a0a0f; font-size: 0.72rem; font-family: var(--mono); font-weight: 500; cursor: pointer; white-space: nowrap; }
 
+.alertas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+}
+.alerta-card {
+  padding: 0.65rem 0.875rem;
+  background: rgba(245,90,90,0.07);
+  border: 1px solid rgba(245,90,90,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.alerta-card.warn {
+  background: rgba(245,166,35,0.07);
+  border-color: rgba(245,166,35,0.2);
+}
+.alerta-icon { font-size: 0.85rem; margin-top: 1px; flex-shrink: 0; }
+.alerta-texto { font-size: 0.78rem; font-family: var(--mono); color: var(--text2); line-height: 1.4; }
+.alerta-titulo { color: var(--danger); font-weight: 500; display: block; margin-bottom: 1px; }
+.alerta-card.warn .alerta-titulo { color: var(--warn); }
+
 /* Descanso info en coach */
 .descanso-card {
   margin: 0 1.25rem 0.5rem;
@@ -827,7 +875,18 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         <input class="api-input" type="password" id="config-api-key" placeholder="AIzaSy..." style="margin-top:0.4rem">
       </div>
       <button class="btn-primary" onclick="guardarConfig()">Guardar y recargar</button>
-      <button onclick="exportarHistorial()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer">Exportar historial ahora</button>
+      <hr style="border:none;border-top:1px solid var(--border2);margin:0">
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        <div class="field-label" style="margin-bottom:0.1rem">Historial</div>
+        <button onclick="exportarHistorial()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer">📤 Exportar historial ahora</button>
+        <input type="file" id="import-file-config" accept=".json" style="display:none" onchange="importarDatosDesdeConfig(this)">
+        <button onclick="document.getElementById('import-file-config').click()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer">📥 Importar historial (.json)</button>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border2);margin:0">
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        <div class="field-label" style="margin-bottom:0.1rem">Reporte técnico</div>
+        <button onclick="generarReporteTecnico();cerrarConfig()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer">📋 Descargar informe técnico (.txt)</button>
+      </div>
     </div>
   </div>
 
@@ -1018,6 +1077,8 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
     <div class="sesiones-list" id="sesiones-recientes">
       <div class="empty-state">Sin datos aún. Empezá a registrar tus ejercicios.</div>
     </div>
+
+    <div class="alertas-container" id="alertas-progresion"></div>
   </div>
 </div>
 
@@ -1196,13 +1257,23 @@ function addMessage(role, content) {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function formatearMensaje(text) {
+function sanitizarTexto(text) {
   return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function formatearMensaje(text) {
+  return sanitizarTexto(text)
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/⚠️(.*)/g, '<em>⚠️$1</em>')
     .replace(/BAJO/g, '<span class="risk-bajo">BAJO</span>')
     .replace(/MODERADO/g, '<span class="risk-mod">MODERADO</span>')
-    .replace(/VERIFICAR/g, '<span class="risk-ver">VERIFICAR</span>');
+    .replace(/VERIFICAR/g, '<span class="risk-ver">VERIFICAR</span>')
+    .replace(/\n/g, '<br>');
 }
 
 async function sendMessage() {
@@ -1254,6 +1325,11 @@ async function sendMessage() {
       // Activar modo sesión
       if (text.toLowerCase().includes('voy a entrenar')) activarSesion();
 
+      // Ocultar alerta dorsal si el coach confirma cero dolor
+      if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
+        document.getElementById('dorsal-alert').style.display = 'none';
+      }
+
       // Guardar contexto al cerrar
       if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine') || text.toLowerCase().includes('cerrar sesión')) {
         checkAndSaveContext(reply);
@@ -1299,6 +1375,9 @@ function cerrarSesion() {
   document.getElementById('btn-cerrar-sesion').classList.remove('visible');
   document.getElementById('descanso-card').classList.remove('visible');
   sesionActiva = false;
+  // Resetear historial de conversación para liberar memoria
+  // Se hace con delay para que sendMessage() alcance a usar el history actual
+  setTimeout(() => { conversationHistory = []; }, 3000);
 }
 
 function checkAndSaveContext(replyText) {
@@ -1342,6 +1421,102 @@ function exportarHistorial(silencioso = false) {
   if (!silencioso) showToast('Historial exportado ✓');
 }
 
+function generarReporteTecnico() {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const contexto = localStorage.getItem('gymcoach_contexto_previo') || 'Sin sesiones previas registradas.';
+  const diasCount = JSON.parse(localStorage.getItem('gymcoach_dias_count') || '{"A":0,"B":0,"C":0}');
+  const fecha = new Date().toLocaleDateString('es-AR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  // Agrupar historial por ejercicio para stats
+  const porEjercicio = {};
+  historial.forEach(r => {
+    if (!porEjercicio[r.ejercicio]) porEjercicio[r.ejercicio] = [];
+    const maxKg = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
+    const rpePromedio = r.sets.filter(s => s.rpe).length > 0
+      ? (r.sets.filter(s => s.rpe).reduce((acc, s) => acc + parseFloat(s.rpe), 0) / r.sets.filter(s => s.rpe).length).toFixed(1)
+      : null;
+    porEjercicio[r.ejercicio].push({ fecha: r.fecha, dia: r.dia, maxKg, sets: r.sets, rpePromedio });
+  });
+
+  // Últimas 4 semanas
+  const hace4Semanas = new Date();
+  hace4Semanas.setDate(hace4Semanas.getDate() - 28);
+  const recientes = historial.filter(r => new Date(r.fecha + 'T12:00:00') >= hace4Semanas);
+  const sesionesRecientes = [...new Set(recientes.map(r => r.fecha))].length;
+
+  // Construir reporte
+  const linea = '═'.repeat(56);
+  const sep = '─'.repeat(56);
+
+  let reporte = `
+${linea}
+INFORME TÉCNICO INTEGRAL — GYMCOACH JM
+${linea}
+Atleta:    Juan Martín Atencio
+Edad:      46 años | Peso: 95 kg | Rosario, Santa Fe
+Generado:  ${fecha}
+Sistema:   GymCoach JM v1.1
+${sep}
+
+1. RESUMEN DE ACTIVIDAD
+${sep}
+Sesiones totales registradas:  ${[...new Set(historial.map(r => r.fecha))].length}
+Sesiones últimas 4 semanas:    ${sesionesRecientes}
+Días A completados:            ${diasCount.A}
+Días B completados:            ${diasCount.B}
+Días C completados:            ${diasCount.C}
+Ejercicios en base de datos:   ${Object.keys(porEjercicio).length}
+
+2. ESTADO CLÍNICO ACTUAL
+${sep}
+${contexto}
+
+3. CARGAS MÁXIMAS POR EJERCICIO
+${sep}
+`;
+
+  Object.entries(porEjercicio).forEach(([ej, sesiones]) => {
+    const maxTotal = Math.max(...sesiones.map(s => s.maxKg));
+    const ultimaSesion = sesiones[sesiones.length - 1];
+    const primera = sesiones[0];
+    const delta = maxTotal - primera.maxKg;
+    const rpeStr = ultimaSesion.rpePromedio ? ` | RPE prom: ${ultimaSesion.rpePromedio}` : '';
+    reporte += `${ej}\n`;
+    reporte += `  Máximo histórico: ${maxTotal} kg  |  Δ desde inicio: ${delta >= 0 ? '+' : ''}${delta} kg${rpeStr}\n`;
+    reporte += `  Sesiones: ${sesiones.length}  |  Última: ${ultimaSesion.fecha}\n\n`;
+  });
+
+  reporte += `
+4. HISTORIAL COMPLETO (últimas 20 sesiones)
+${sep}
+`;
+
+  const ultimas20 = historial.slice(-20).reverse();
+  ultimas20.forEach(r => {
+    const setsStr = r.sets.map(s => `${s.reps}×${s.kg}kg${s.rpe ? ` @RPE${s.rpe}` : ''}`).join(' | ');
+    reporte += `[${r.fecha}] Día ${r.dia} — ${r.ejercicio}\n`;
+    reporte += `  Sets: ${setsStr}\n`;
+    if (r.notas) reporte += `  Notas: ${r.notas}\n`;
+    reporte += '\n';
+  });
+
+  reporte += `
+${linea}
+Generado automáticamente por GymCoach JM
+tinchoaten.github.io/gymcoach
+${linea}
+`;
+
+  const blob = new Blob([reporte.trim()], {type: 'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `informe_tecnico_gymcoach_${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Informe técnico generado ✓');
+}
+
 function mostrarConfig() {
   document.getElementById('config-api-key').value = apiKey;
   document.getElementById('modal-config').style.display = 'flex';
@@ -1355,7 +1530,8 @@ function guardarConfig() {
   apiKey = key;
   localStorage.setItem('gymcoach_api_key', key);
   cerrarConfig();
-  showToast('API key actualizada ✓');
+  showToast('API key actualizada — recargando...');
+  setTimeout(() => location.reload(), 800);
 }
 
 function checkBackupAlert() {
@@ -1374,11 +1550,19 @@ function checkBackupAlert() {
 let setsData = [];
 
 function renderSetsUI(n) {
-  setsData = Array.from({length: n}, (_,i) => ({reps: '', kg: ''}));
+  // Preservar valores existentes al agregar sets
+  const prev = setsData.slice();
+  setsData = Array.from({length: n}, (_,i) => ({
+    reps: prev[i]?.reps || '',
+    kg:   prev[i]?.kg   || '',
+    rpe:  prev[i]?.rpe  || ''
+  }));
   const container = document.getElementById('sets-container');
 
-  const labels = `<div class="field-label" style="grid-column:1/-1;margin-bottom:0">Repeticiones</div>
-    <div class="field-label" style="margin-bottom:0">Kg</div>
+  const labels = `
+    <div class="field-label" style="grid-column:1;margin-bottom:0">Reps</div>
+    <div class="field-label" style="grid-column:2;margin-bottom:0">Kg</div>
+    <div class="field-label" style="grid-column:3;margin-bottom:0">RPE</div>
     <div></div>`;
 
   const rows = setsData.map((_, i) => `
@@ -1386,7 +1570,10 @@ function renderSetsUI(n) {
       oninput="setsData[${i}].reps=this.value" value="${setsData[i].reps || ''}">
     <input type="number" inputmode="decimal" step="0.5" placeholder="Kg" style="grid-column:2;height:38px"
       oninput="setsData[${i}].kg=this.value" value="${setsData[i].kg || ''}">
-    <div class="set-num" style="grid-column:3">${i+1}</div>
+    <input type="number" inputmode="decimal" min="1" max="10" placeholder="—" style="grid-column:3;height:38px"
+      oninput="setsData[${i}].rpe=this.value" value="${setsData[i].rpe || ''}"
+      title="Esfuerzo percibido 1–10">
+    <div class="set-num" style="grid-column:4">${i+1}</div>
   `).join('');
 
   container.innerHTML = labels + rows;
@@ -1411,7 +1598,11 @@ function guardarEjercicio() {
 
   if (!ejercicio) { showToast('Seleccioná un ejercicio'); return; }
 
-  const sets = setsData.filter(s => s.reps && s.kg);
+  const sets = setsData.filter(s => s.reps && s.kg).map(s => ({
+    reps: s.reps,
+    kg: s.kg,
+    ...(s.rpe ? { rpe: s.rpe } : {})
+  }));
   if (sets.length === 0) { showToast('Ingresá al menos 1 set completo'); return; }
 
   const dia = document.getElementById('reg-dia').value;
@@ -1429,6 +1620,7 @@ function guardarEjercicio() {
   renderHistorialHoy();
   actualizarSelectorProgresion();
   renderProgresion();
+  checkAlertasProgresion();
   showToast(`${ejercicio} guardado ✓`);
 }
 
@@ -1443,23 +1635,51 @@ function renderHistorialHoy() {
     return;
   }
 
-  lista.innerHTML = hoyData.map(r => {
+  lista.innerHTML = hoyData.map((r, i) => {
+    // Encontrar índice real en el historial completo para poder borrar
+    const idxReal = historial.findIndex((h, idx) =>
+      h.fecha === r.fecha && h.ejercicio === r.ejercicio &&
+      JSON.stringify(h.sets) === JSON.stringify(r.sets) &&
+      idx >= (i === 0 ? 0 : 0) // buscar desde el principio, tomamos la i-ésima coincidencia
+    );
+    // Calcular índice real correctamente para duplicados
+    let count = 0;
+    let realIdx = -1;
+    for (let j = 0; j < historial.length; j++) {
+      if (historial[j].fecha === r.fecha && historial[j].ejercicio === r.ejercicio) {
+        if (count === i) { realIdx = j; break; }
+        count++;
+      }
+    }
     const maxKg = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
-    const setsStr = r.sets.map(s => `${s.reps}×${s.kg}kg`).join(' · ');
+    const setsStr = r.sets.map(s => `${s.reps}×${s.kg}kg${s.rpe ? ` @${s.rpe}` : ''}`).join(' · ');
     return `<div class="ejercicio-card">
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="ej-name">${r.ejercicio}</div>
         <div class="ej-sets">${setsStr}</div>
         ${r.notas ? `<div class="ej-sets" style="color:var(--text3);margin-top:2px">${r.notas}</div>` : ''}
       </div>
-      <div class="ej-peso-max">${maxKg} kg</div>
+      <div class="ej-acciones">
+        <div class="ej-peso-max">${maxKg} kg</div>
+        <button class="btn-borrar-reg" onclick="borrarRegistro(${realIdx})" title="Borrar registro">✕ borrar</button>
+      </div>
     </div>`;
   }).join('');
 }
 
-// ═══════════════════════════════════════
-// PROGRESIÓN
-// ═══════════════════════════════════════
+function borrarRegistro(idx) {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  if (idx < 0 || idx >= historial.length) return;
+  const nombre = historial[idx].ejercicio;
+  if (!confirm(`¿Borrar el registro de "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+  historial.splice(idx, 1);
+  localStorage.setItem('gymcoach_historial', JSON.stringify(historial));
+  renderHistorialHoy();
+  actualizarSelectorProgresion();
+  renderProgresion();
+  checkAlertasProgresion();
+  showToast(`Registro de ${nombre} eliminado`);
+}
 function actualizarSelectorProgresion() {
   const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
   const ejercicios = [...new Set(historial.map(r => r.ejercicio))];
@@ -1567,6 +1787,79 @@ function renderProgresion() {
 }
 
 // ═══════════════════════════════════════
+// ALERTAS DE PROGRESIÓN ESTANCADA
+// ═══════════════════════════════════════
+function checkAlertasProgresion() {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const ejercicios = [...new Set(historial.map(r => r.ejercicio))];
+  const alertas = [];
+  const hoy = new Date();
+
+  ejercicios.forEach(ej => {
+    const registros = historial
+      .filter(r => r.ejercicio === ej)
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+    if (registros.length < 2) return;
+
+    // Agrupar por fecha, tomar máximo kg por sesión
+    const porFecha = {};
+    registros.forEach(r => {
+      const max = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
+      if (!porFecha[r.fecha] || porFecha[r.fecha] < max) porFecha[r.fecha] = max;
+    });
+
+    const fechas = Object.keys(porFecha).sort();
+    if (fechas.length < 2) return;
+
+    const ultimaFecha = new Date(fechas[fechas.length - 1] + 'T12:00:00');
+    const diasDesdeUltima = (hoy - ultimaFecha) / 86400000;
+
+    // Solo analizar ejercicios entrenados en las últimas 6 semanas
+    if (diasDesdeUltima > 42) return;
+
+    const pesos = fechas.map(f => porFecha[f]);
+    const maxReciente = Math.max(...pesos.slice(-4)); // últimas 4 sesiones
+    const maxAnterior = Math.max(...pesos.slice(0, -4));
+
+    // Calcular semanas sin progresar
+    if (fechas.length >= 4) {
+      const fechaReferencia = new Date(fechas[fechas.length - 4] + 'T12:00:00');
+      const semanasEstancado = (ultimaFecha - fechaReferencia) / (7 * 86400000);
+
+      if (semanasEstancado >= 2 && maxReciente <= maxAnterior) {
+        const nivel = semanasEstancado >= 3 ? 'danger' : 'warn';
+        alertas.push({
+          ejercicio: ej,
+          semanas: Math.round(semanasEstancado),
+          pesoMax: maxReciente,
+          nivel
+        });
+      }
+    }
+  });
+
+  const contenedor = document.getElementById('alertas-progresion');
+  if (!contenedor) return;
+
+  if (alertas.length === 0) {
+    contenedor.innerHTML = '';
+    return;
+  }
+
+  contenedor.innerHTML = alertas.map(a => `
+    <div class="alerta-card ${a.nivel === 'warn' ? 'warn' : ''}">
+      <div class="alerta-icon">${a.nivel === 'warn' ? '⚠️' : '🔴'}</div>
+      <div class="alerta-texto">
+        <span class="alerta-titulo">${a.ejercicio}</span>
+        Sin progresión hace ${a.semanas} sem · Máximo actual: ${a.pesoMax} kg
+        ${a.nivel !== 'warn' ? '· Considerá deload o cambio de estímulo' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════
 // UI UTILS
 // ═══════════════════════════════════════
 function switchTab(tab) {
@@ -1577,7 +1870,7 @@ function switchTab(tab) {
   document.querySelectorAll('.panel').forEach(p => {
     p.classList.toggle('active', p.id === `panel-${tab}`);
   });
-  if (tab === 'progresion') renderProgresion();
+  if (tab === 'progresion') { renderProgresion(); checkAlertasProgresion(); }
 }
 
 function showToast(msg) {
@@ -1609,15 +1902,112 @@ function importarDatos(input) {
       localStorage.setItem("gymcoach_historial", JSON.stringify(unique));
       if (data.contexto_previo) localStorage.setItem("gymcoach_contexto_previo", data.contexto_previo);
       showToast("✓ " + data.historial.length + " registros importados");
-      renderHistorialHoy(); actualizarSelectorProgresion(); renderProgresion();
+      // Si ya hay API key guardada, arrancar la app directamente
+      const savedKey = localStorage.getItem('gymcoach_api_key');
+      if (savedKey) {
+        apiKey = savedKey;
+        iniciarApp();
+      } else {
+        renderHistorialHoy(); actualizarSelectorProgresion(); renderProgresion();
+      }
     } catch(err) { showToast("Error al leer el archivo JSON"); }
   };
   reader.readAsText(file);
 }
 
+function importarDatosDesdeConfig(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.historial || !Array.isArray(data.historial)) throw new Error("Formato inválido");
+      const existente = JSON.parse(localStorage.getItem("gymcoach_historial") || "[]");
+      const merged = [...existente, ...data.historial];
+      const seen = new Set();
+      const unique = merged.filter(r => {
+        const key = r.fecha+"|"+r.ejercicio+"|"+(r.sets[0]?.kg||"");
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      });
+      localStorage.setItem("gymcoach_historial", JSON.stringify(unique));
+      if (data.contexto_previo) localStorage.setItem("gymcoach_contexto_previo", data.contexto_previo);
+      cerrarConfig();
+      showToast("✓ " + data.historial.length + " registros importados");
+      renderHistorialHoy(); actualizarSelectorProgresion(); renderProgresion();
+    } catch(err) { showToast("Error al leer el archivo JSON"); }
+  };
+  reader.readAsText(file);
+  // Reset para permitir reimportar el mismo archivo
+  input.value = "";
+}
+
 // ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// PWA — MANIFEST + SERVICE WORKER
+// ═══════════════════════════════════════
+(function() {
+  // Manifest inline (inyectado como Blob para funcionar sin servidor externo)
+  const manifest = {
+    name: "GymCoach JM",
+    short_name: "GymCoach",
+    description: "Coach biomecánico personal de Juan Martín Atencio",
+    start_url: "./",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#0a0a0f",
+    theme_color: "#0a0a0f",
+    icons: [
+      {
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230a0a0f'/%3E%3Ctext x='50%25' y='54%25' font-family='sans-serif' font-size='110' font-weight='900' fill='%23c8f55a' text-anchor='middle' dominant-baseline='middle'%3EG%3C/text%3E%3C/svg%3E",
+        sizes: "192x192",
+        type: "image/svg+xml",
+        purpose: "any maskable"
+      },
+      {
+        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230a0a0f'/%3E%3Ctext x='50%25' y='54%25' font-family='sans-serif' font-size='300' font-weight='900' fill='%23c8f55a' text-anchor='middle' dominant-baseline='middle'%3EG%3C/text%3E%3C/svg%3E",
+        sizes: "512x512",
+        type: "image/svg+xml",
+        purpose: "any maskable"
+      }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  const manifestUrl = URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest').href = manifestUrl;
+
+  // Service Worker inline — permite instalación y caché offline
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+const CACHE = 'gymcoach-v1';
+const ASSETS = [self.location.href.replace('/sw-inline.js','')];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).then(r => {
+      const clone = r.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return r;
+    }).catch(() => caches.match(e.request))
+  );
+});
+    `;
+    const swBlob = new Blob([swCode], {type: 'application/javascript'});
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl, {scope: './'})
+      .catch(() => {}); // silencioso si falla (ej. Firefox privado)
+  }
+})();
+
 window.addEventListener('load', () => {
   const savedKey = localStorage.getItem('gymcoach_api_key');
   if (savedKey) {
