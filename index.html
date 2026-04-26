@@ -1551,15 +1551,71 @@ function altaDorsal() {
 // ═══════════════════════════════════════
 // PASO 5 — FALLBACK DE MODELOS GEMINI
 // ═══════════════════════════════════════
-const MODELO = 'gemini-1.5-flash'; // Free tier: 15 RPM / 1500 req/día
-let modeloActivo = MODELO;
+// Modelos confirmados disponibles en esta cuenta (Google AI Studio, free tier, abril 2026)
+// API: v1beta + generateContent (sin streaming)
+const MODELOS_CANDIDATOS = [
+  'gemini-2.0-flash',           // Estable — primera opción
+  'gemini-2.0-flash-lite',      // Estable — más liviano
+  'gemini-2.5-flash',           // Estable — más capaz
+  'gemini-2.5-flash-lite',      // Estable — ultraliviano
+  'gemini-2.5-pro',             // Estable — máxima calidad
+  'gemini-3-flash-preview',     // Preview — default de la cuenta
+];
+let MODELO = '';
+let modeloActivo = '';
+
+async function detectarModelo(key) {
+  // Primero intentar el modelo guardado
+  const guardado = localStorage.getItem('gymcoach_modelo');
+  if (guardado) {
+    const ok = await testModelo(guardado, key);
+    if (ok) { setModelo(guardado); return true; }
+  }
+  // Probar cada candidato
+  for (const m of MODELOS_CANDIDATOS) {
+    const ok = await testModelo(m, key);
+    if (ok) { setModelo(m); return true; }
+  }
+  return false;
+}
+
+async function testModelo(modelo, key) {
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role:'user', parts:[{text:'hi'}] }], generationConfig:{ maxOutputTokens:5 } }) }
+    );
+    const d = await res.json();
+    return !!(d.candidates && d.candidates[0]);
+  } catch(e) { return false; }
+}
+
+function setModelo(m) {
+  MODELO = m;
+  modeloActivo = m;
+  localStorage.setItem('gymcoach_modelo', m);
+  const badge = document.getElementById('model-badge');
+  if (badge) badge.textContent = m.replace('gemini-', '');
+}
 
 async function fetchGeminiConFallback(body, apiKey) {
+  if (!MODELO) {
+    const ok = await detectarModelo(apiKey);
+    if (!ok) return { error: { message: 'Ningún modelo disponible con esta API key. Verificá en aistudio.google.com/apikey' } };
+  }
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${apiKey}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   );
-  return await res.json();
+  const data = await res.json();
+  // Si falla el modelo actual, resetear y reintentar
+  if (data.error && (data.error.code === 404 || (data.error.message || '').includes('not found'))) {
+    MODELO = '';
+    localStorage.removeItem('gymcoach_modelo');
+    return fetchGeminiConFallback(body, apiKey);
+  }
+  return data;
 }
 
 const PROMPT_V2 = `ROL: Coach Biomecánico Clínico. Atleta: Juan Martín Atencio, 46a, 95kg.
@@ -1584,17 +1640,12 @@ CIERRE: Reporte con ejercicios completados, progresión, estado SNC, párrafo cl
 async function probarConexion() {
   const key = document.getElementById('config-api-key').value.trim() || apiKey;
   if (!key || !key.startsWith('AIza')) { showToast('API key inválida'); return; }
-  showToast('Probando conexión...');
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${key}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 5 } }) }
-    );
-    const data = await res.json();
-    if (data.candidates) showToast(`✓ Conectado: ${MODELO}`);
-    else showToast(`✗ Error: ${data.error?.message || 'sin respuesta'}`);
-  } catch(e) { showToast(`✗ Error de red: ${e.message}`); }
+  showToast('Detectando modelo...');
+  MODELO = ''; // forzar re-detección
+  localStorage.removeItem('gymcoach_modelo');
+  const ok = await detectarModelo(key);
+  if (ok) showToast(`✓ Modelo activo: ${MODELO}`);
+  else showToast('✗ Ningún modelo disponible con esta key');
 }
 
 // ═══════════════════════════════════════
@@ -2506,9 +2557,19 @@ function iniciarApp() {
   renderProgresion();
   checkBackupAlert();
 
-  // Mostrar modelo activo en header
+  // Auto-detectar modelo en segundo plano
+  const savedModelo = localStorage.getItem('gymcoach_modelo');
   const badge = document.getElementById('model-badge');
-  if (badge) badge.textContent = MODELO.replace('gemini-', '');
+  if (savedModelo) {
+    MODELO = savedModelo;
+    modeloActivo = savedModelo;
+    if (badge) badge.textContent = savedModelo.replace('gemini-', '');
+  } else {
+    if (badge) badge.textContent = 'detectando...';
+    detectarModelo(apiKey).then(ok => {
+      if (!ok && badge) badge.textContent = 'sin modelo';
+    });
+  }
   // Verificar estado del dorsal
   const dorsalAlta = localStorage.getItem('gymcoach_dorsal_alta');
   const alertaEl = document.getElementById('dorsal-alert');
