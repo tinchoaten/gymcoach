@@ -1551,7 +1551,7 @@ function altaDorsal() {
 // ═══════════════════════════════════════
 // PASO 5 — FALLBACK DE MODELOS GEMINI
 // ═══════════════════════════════════════
-const MODELO = 'gemini-1.5-flash'; // Modelo fijo — free tier estable
+const MODELO = 'gemini-1.5-flash'; // Free tier: 15 RPM / 1500 req/día
 let modeloActivo = MODELO;
 
 async function fetchGeminiConFallback(body, apiKey) {
