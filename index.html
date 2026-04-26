@@ -1178,7 +1178,7 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
     </div>
 
     <div class="quick-btns" id="quick-btns">
-      <button class="quick-btn" onclick="mostrarCheckin()">🏋️ Voy a entrenar</button>
+      <button class="quick-btn" onclick="sesionActiva ? showToast('Sesión ya activa') : mostrarCheckin()">🏋️ Voy a entrenar</button>
       <button class="quick-btn" onclick="sendQuick('Ok, listo')">✓ Listo</button>
       <button class="quick-btn" onclick="cerrarSesion()">✅ Terminé</button>
       <button class="quick-btn" onclick="sendQuick('Siento molestia leve en el dorsal')">⚠ Molestia dorsal</button>
@@ -1449,10 +1449,13 @@ function confirmarCheckin() {
   }
   localStorage.setItem('gymcoach_checkin', JSON.stringify({ ...checkinData, fecha: new Date().toISOString() }));
   document.getElementById('modal-checkin').classList.remove('visible');
+  // Activar sesión ANTES de enviar (evita que sendMessage reactive el modal)
+  activarSesion();
   const resumen = `Energía: ${checkinData.energia} · Dolor: ${checkinData.dolor} · Sueño: ${checkinData.sueno}`;
-  showToast('Check-in guardado ✓');
+  showToast('Sesión iniciada ✓');
   const chatInput = document.getElementById('chat-input');
-  chatInput.value = `Voy a entrenar. Check-in: ${resumen}`;
+  // Texto sin palabras trigger ("voy a entrenar" / "check-in") para evitar loop
+  chatInput.value = `Estado de inicio — ${resumen}. Indicá el Día y arrancamos.`;
   sendMessage();
 }
 
@@ -1473,7 +1476,8 @@ function confirmarPostSesion() {
   const resumen = `RPE: ${postSesionData.rpe || 'N/D'} · Dolor post: ${postSesionData.dolor || 'N/D'} · Rendimiento: ${postSesionData.rendimiento || 'N/D'}`;
   localStorage.setItem('gymcoach_post_sesion', JSON.stringify({ ...postSesionData, fecha: new Date().toISOString() }));
   const chatInput = document.getElementById('chat-input');
-  chatInput.value = `Terminé la sesión. Feedback post-sesión — ${resumen}. Generá el reporte final clínico completo.`;
+  chatInput.value = `Reporte de sesión — Feedback: ${resumen}. Generá el reporte final clínico completo.`;
+  sesionActiva = false; // Reset para permitir nueva sesión
   sendMessage();
   setTimeout(() => { conversationHistory = []; }, 3000);
 }
@@ -1824,8 +1828,10 @@ async function sendMessage() {
       conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
       addMessage('assistant', reply);
 
-      // Activar modo sesión
-      if (text.toLowerCase().includes('voy a entrenar') || text.toLowerCase().includes('check-in')) activarSesion();
+      // Activar modo sesión solo si no está ya activa
+      // El modal de check-in se abre SOLO desde el botón "Voy a entrenar"
+      // activarSesion() internamente ya verifica sesionActiva para evitar loops
+      if (text.toLowerCase().includes('estado de inicio') && !sesionActiva) activarSesion();
 
       // Alta dorsal si confirma cero dolor
       if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
@@ -1874,11 +1880,7 @@ function autoResize(el) {
 let sesionActiva = false;
 
 function activarSesion() {
-  mostrarCheckin();
-  return;
-  // (el código original queda como fallback post-checkin)
-}
-function activarSesionReal() {
+  if (sesionActiva) return;
   sesionActiva = true;
   document.getElementById('btn-cerrar-sesion').classList.add('visible');
   document.getElementById('descanso-card').classList.add('visible');
