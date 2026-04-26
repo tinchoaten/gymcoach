@@ -1051,6 +1051,7 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         <input class="api-input" type="password" id="config-api-key" placeholder="AIzaSy..." style="margin-top:0.4rem">
       </div>
       <button class="btn-primary" onclick="guardarConfig()">Guardar y recargar</button>
+      <button onclick="probarConexion()" style="padding:0.7rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-family:var(--mono);font-size:0.8rem;cursor:pointer;width:100%">🔌 Probar conexión API</button>
       <hr style="border:none;border-top:1px solid var(--border2);margin:0">
       <div style="display:flex;flex-direction:column;gap:0.5rem">
         <div class="field-label" style="margin-bottom:0.1rem">Historial</div>
@@ -1550,37 +1551,15 @@ function altaDorsal() {
 // ═══════════════════════════════════════
 // PASO 5 — FALLBACK DE MODELOS GEMINI
 // ═══════════════════════════════════════
-const GEMINI_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash-8b',
-];
-let modeloActivo = null;
+const MODELO = 'gemini-1.5-flash'; // Modelo fijo — free tier estable
+let modeloActivo = MODELO;
 
 async function fetchGeminiConFallback(body, apiKey) {
-  const modelos = modeloActivo ? [modeloActivo, ...GEMINI_MODELS.filter(m => m !== modeloActivo)] : GEMINI_MODELS;
-  for (const modelo of modelos) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-      );
-      const data = await res.json();
-      if (data.error && (data.error.code === 404 || data.error.status === 'NOT_FOUND' || data.error.message?.includes('not found'))) continue;
-      if (data.candidates && data.candidates[0]) {
-        if (modeloActivo !== modelo) {
-          modeloActivo = modelo;
-          const badge = document.getElementById('model-badge');
-          if (badge) badge.textContent = modelo;
-          localStorage.setItem('gymcoach_modelo', modelo);
-        }
-        return data;
-      }
-      if (data.error) return data; // error real (auth, quota), no seguir
-    } catch(e) { continue; }
-  }
-  return { error: { message: 'No se pudo conectar con ningún modelo Gemini disponible.' } };
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${apiKey}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  return await res.json();
 }
 
 const PROMPT_V2 = `ROL: Coach Biomecánico Clínico. Atleta: Juan Martín Atencio, 46a, 95kg.
@@ -1598,6 +1577,25 @@ Sugerencia biomecánica en máximo 1-2 líneas. Agregar ⚠️ DORSAL si aplica.
 
 CIERRE: Reporte con ejercicios completados, progresión, estado SNC, párrafo clínico para próxima sesión.`;
 
+
+// ═══════════════════════════════════════
+// PROBAR CONEXIÓN
+// ═══════════════════════════════════════
+async function probarConexion() {
+  const key = document.getElementById('config-api-key').value.trim() || apiKey;
+  if (!key || !key.startsWith('AIza')) { showToast('API key inválida'); return; }
+  showToast('Probando conexión...');
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${key}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 5 } }) }
+    );
+    const data = await res.json();
+    if (data.candidates) showToast(`✓ Conectado: ${MODELO}`);
+    else showToast(`✗ Error: ${data.error?.message || 'sin respuesta'}`);
+  } catch(e) { showToast(`✗ Error de red: ${e.message}`); }
+}
 
 // ═══════════════════════════════════════
 // KNOWLEDGE DIGEST + PROMPT SISTEMA
@@ -2508,14 +2506,9 @@ function iniciarApp() {
   renderProgresion();
   checkBackupAlert();
 
-  // Restaurar modelo activo
-  const savedModelo = localStorage.getItem('gymcoach_modelo');
-  if (savedModelo) {
-    modeloActivo = savedModelo;
-    const badge = document.getElementById('model-badge');
-    if (badge) badge.textContent = savedModelo;
-  }
-
+  // Mostrar modelo activo en header
+  const badge = document.getElementById('model-badge');
+  if (badge) badge.textContent = MODELO.replace('gemini-', '');
   // Verificar estado del dorsal
   const dorsalAlta = localStorage.getItem('gymcoach_dorsal_alta');
   const alertaEl = document.getElementById('dorsal-alert');
