@@ -810,6 +810,181 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* ── TIMER DE DESCANSO ── */
+.timer-bar {
+  display: none;
+  position: sticky;
+  top: 105px;
+  z-index: 35;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 0.6rem 1.25rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+.timer-bar.visible { display: flex; }
+.timer-display {
+  font-family: var(--mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--accent);
+  min-width: 3.5rem;
+  transition: color 0.3s;
+}
+.timer-display.urgent { color: var(--danger); }
+.timer-label {
+  font-size: 0.72rem;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  flex: 1;
+}
+.timer-btns { display: flex; gap: 0.5rem; }
+.timer-btn {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.timer-btn.active { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+.timer-progress {
+  height: 2px;
+  background: var(--border);
+  width: 100%;
+  margin-top: 4px;
+}
+.timer-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 1s linear, background 0.3s;
+}
+
+/* ── PRE-FILL HINT ── */
+.prefill-hint {
+  display: none;
+  background: rgba(200,245,90,0.06);
+  border: 1px solid rgba(200,245,90,0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-family: var(--mono);
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex-direction: column;
+}
+.prefill-hint.visible { display: flex; }
+.prefill-hint-title { font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.prefill-hint-data { color: var(--text2); font-size: 0.78rem; }
+.prefill-suggestion {
+  background: rgba(125,247,196,0.08);
+  border: 1px solid rgba(125,247,196,0.25);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--accent2);
+}
+
+/* ── CHECK-IN MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.modal-overlay.visible { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.modal-title {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.modal-subtitle {
+  font-size: 0.82rem;
+  color: var(--text2);
+  margin-top: -0.75rem;
+}
+.checkin-row { display: flex; flex-direction: column; gap: 0.4rem; }
+.checkin-label {
+  font-size: 0.72rem;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.checkin-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.checkin-btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: none;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.checkin-btn.selected { background: var(--accent); color: #0a0a0f; border-color: var(--accent); }
+.btn-checkin-ok {
+  padding: 0.85rem;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── ALTA DORSAL BTN ── */
+.alta-dorsal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(125,247,196,0.3);
+  background: rgba(125,247,196,0.07);
+  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+/* ── MODELO ACTIVO en header ── */
+.model-badge {
+  font-size: 0.65rem;
+  font-family: var(--mono);
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
 </style>
 </head>
 <body>
@@ -856,6 +1031,7 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
       <div class="header-status">
         <div class="status-dot"></div>
         <span id="header-day-label">DÍA A</span>
+        <span class="model-badge" id="model-badge">gemini</span>
       </div>
       <button onclick="mostrarConfig()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;opacity:0.5">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -896,6 +1072,96 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
     <button class="tab-btn" onclick="switchTab('progresion')">Progresión</button>
   </nav>
 
+  <!-- ── TIMER DE DESCANSO ── -->
+  <div class="timer-bar" id="timer-bar">
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div class="timer-display" id="timer-display">90</div>
+        <div>
+          <div class="timer-label">Descanso entre sets</div>
+          <div class="timer-btns">
+            <button class="timer-btn" id="tbtn-60" onclick="setTimer(60)">60s</button>
+            <button class="timer-btn active" id="tbtn-90" onclick="setTimer(90)">90s</button>
+            <button class="timer-btn" id="tbtn-120" onclick="setTimer(120)">120s</button>
+          </div>
+        </div>
+      </div>
+      <div class="timer-progress"><div class="timer-progress-fill" id="timer-fill" style="width:100%"></div></div>
+    </div>
+    <button onclick="cancelTimer()" style="background:none;border:none;color:var(--text3);font-size:1.1rem;cursor:pointer;padding:0.25rem">✕</button>
+  </div>
+
+  <!-- ── MODAL CHECK-IN DE INICIO ── -->
+  <div class="modal-overlay" id="modal-checkin">
+    <div class="modal-box">
+      <div>
+        <div class="modal-title">Check-in de sesión</div>
+        <div class="modal-subtitle">3 preguntas rápidas antes de arrancar</div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Energía hoy</div>
+        <div class="checkin-options" id="ci-energia">
+          <button class="checkin-btn" onclick="selectCheckin('energia','baja',this)">Baja</button>
+          <button class="checkin-btn" onclick="selectCheckin('energia','normal',this)">Normal</button>
+          <button class="checkin-btn" onclick="selectCheckin('energia','alta',this)">Alta</button>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Dolor o molestia activa</div>
+        <div class="checkin-options" id="ci-dolor">
+          <button class="checkin-btn" onclick="selectCheckin('dolor','ninguno',this)">Ninguno</button>
+          <button class="checkin-btn" onclick="selectCheckin('dolor','leve',this)">Leve</button>
+          <button class="checkin-btn" onclick="selectCheckin('dolor','moderado',this)">Moderado</button>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Horas de sueño anoche</div>
+        <div class="checkin-options" id="ci-sueno">
+          <button class="checkin-btn" onclick="selectCheckin('sueno','menos de 6',this)">−6h</button>
+          <button class="checkin-btn" onclick="selectCheckin('sueno','6-7',this)">6–7h</button>
+          <button class="checkin-btn" onclick="selectCheckin('sueno','8+',this)">8h+</button>
+        </div>
+      </div>
+      <button class="btn-checkin-ok" onclick="confirmarCheckin()">Arrancar sesión →</button>
+    </div>
+  </div>
+
+  <!-- ── MODAL FEEDBACK POST-SESIÓN ── -->
+  <div class="modal-overlay" id="modal-postcesion">
+    <div class="modal-box">
+      <div>
+        <div class="modal-title">¿Cómo fue la sesión?</div>
+        <div class="modal-subtitle">Feedback rápido para el coach</div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Esfuerzo general (RPE)</div>
+        <div class="checkin-options" id="ps-rpe">
+          <button class="checkin-btn" onclick="selectPost('rpe','bajo (1-5)',this)">Bajo</button>
+          <button class="checkin-btn" onclick="selectPost('rpe','medio (6-7)',this)">Medio</button>
+          <button class="checkin-btn" onclick="selectPost('rpe','alto (8-9)',this)">Alto</button>
+          <button class="checkin-btn" onclick="selectPost('rpe','máximo (10)',this)">Máximo</button>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Dolor post-sesión</div>
+        <div class="checkin-options" id="ps-dolor">
+          <button class="checkin-btn" onclick="selectPost('dolor','ninguno',this)">Ninguno</button>
+          <button class="checkin-btn" onclick="selectPost('dolor','leve',this)">Leve</button>
+          <button class="checkin-btn" onclick="selectPost('dolor','moderado',this)">Moderado</button>
+        </div>
+      </div>
+      <div class="checkin-row">
+        <div class="checkin-label">Rendimiento vs sesión anterior</div>
+        <div class="checkin-options" id="ps-rendimiento">
+          <button class="checkin-btn" onclick="selectPost('rendimiento','peor',this)">Peor</button>
+          <button class="checkin-btn" onclick="selectPost('rendimiento','igual',this)">Igual</button>
+          <button class="checkin-btn" onclick="selectPost('rendimiento','mejor',this)">Mejor</button>
+        </div>
+      </div>
+      <button class="btn-checkin-ok" onclick="confirmarPostSesion()">Guardar y cerrar sesión →</button>
+    </div>
+  </div>
+
   <!-- ── CHAT PANEL ── -->
   <div id="panel-chat" class="panel active">
     <div class="chat-banner">
@@ -906,13 +1172,14 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
       <div class="banner-desc" id="banner-desc">Pierna / Hombros / Core</div>
       <div class="dorsal-alert" id="dorsal-alert">
         ⚠ Dorsal: FASE ACTIVA — protocolo de protección en curso
+        <button class="alta-dorsal-btn" onclick="altaDorsal()" id="alta-dorsal-btn" title="Confirmar recuperación y cerrar alerta">✓ Dar de alta</button>
       </div>
     </div>
 
     <div class="quick-btns" id="quick-btns">
-      <button class="quick-btn" onclick="sendQuick('Voy a entrenar')">🏋️ Voy a entrenar</button>
+      <button class="quick-btn" onclick="mostrarCheckin()">🏋️ Voy a entrenar</button>
       <button class="quick-btn" onclick="sendQuick('Ok, listo')">✓ Listo</button>
-      <button class="quick-btn" onclick="sendQuick('Terminé la sesión')">✅ Terminé</button>
+      <button class="quick-btn" onclick="cerrarSesion()">✅ Terminé</button>
       <button class="quick-btn" onclick="sendQuick('Siento molestia leve en el dorsal')">⚠ Molestia dorsal</button>
       <button class="quick-btn" onclick="sendQuick('Cero dolor confirmado en dorsal')">💪 Cero dolor</button>
       <button class="quick-btn" onclick="sendQuick('No pude mantener la excéntrica de 3s')">⏱ Perdí tempo</button>
@@ -1016,6 +1283,13 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         <input type="text" id="custom-ej" placeholder="Ej: Sentadilla goblet">
       </div>
 
+      <!-- Pre-fill hint: último registro del ejercicio -->
+      <div class="prefill-hint" id="prefill-hint">
+        <div class="prefill-hint-title">Última sesión registrada</div>
+        <div class="prefill-hint-data" id="prefill-data">—</div>
+        <div class="prefill-suggestion" id="prefill-suggestion" style="display:none"></div>
+      </div>
+
       <div>
         <div class="field-label">Sets completados</div>
         <div class="sets-grid" id="sets-container">
@@ -1098,6 +1372,234 @@ let chartInstance = null;
 const DIAS = { A: 'Pierna / Hombros / Core', B: 'Espalda / Bíceps (Rehab activa)', C: 'Pecho / Tríceps / Hombro lateral' };
 
 // ═══════════════════════════════════════
+// PASO 1 — TIMER DE DESCANSO
+// ═══════════════════════════════════════
+let timerInterval = null;
+let timerDuracion = 90;
+let timerRestante = 90;
+let timerTotal = 90;
+
+function setTimer(seg) {
+  timerDuracion = seg;
+  [60,90,120].forEach(s => {
+    const btn = document.getElementById('tbtn-'+s);
+    if (btn) btn.classList.toggle('active', s === seg);
+  });
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerRestante = timerDuracion;
+  timerTotal = timerDuracion;
+  const bar = document.getElementById('timer-bar');
+  bar.classList.add('visible');
+  renderTimer();
+  timerInterval = setInterval(() => {
+    timerRestante--;
+    renderTimer();
+    if (timerRestante <= 0) {
+      clearInterval(timerInterval);
+      if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
+      try { const ctx = new (window.AudioContext||window.webkitAudioContext)(); const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.setValueAtTime(0.3, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4); o.start(); o.stop(ctx.currentTime + 0.4); } catch(e) {}
+      document.getElementById('timer-display').textContent = '✓';
+      document.getElementById('timer-display').classList.remove('urgent');
+      document.getElementById('timer-fill').style.width = '100%';
+      document.getElementById('timer-fill').style.background = 'var(--accent2)';
+      setTimeout(() => { bar.classList.remove('visible'); document.getElementById('timer-display').textContent = timerDuracion; document.getElementById('timer-fill').style.background = 'var(--accent)'; }, 2000);
+    }
+  }, 1000);
+}
+
+function renderTimer() {
+  const d = document.getElementById('timer-display');
+  const f = document.getElementById('timer-fill');
+  d.textContent = timerRestante;
+  d.classList.toggle('urgent', timerRestante <= 10);
+  f.style.width = Math.round((timerRestante / timerTotal) * 100) + '%';
+}
+
+function cancelTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timer-bar').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════
+// PASO 2 — CHECK-IN Y POST-SESIÓN
+// ═══════════════════════════════════════
+let checkinData = {};
+let postSesionData = {};
+
+function mostrarCheckin() {
+  checkinData = {};
+  document.querySelectorAll('#modal-checkin .checkin-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('modal-checkin').classList.add('visible');
+}
+
+function selectCheckin(campo, valor, btn) {
+  checkinData[campo] = valor;
+  btn.closest('.checkin-options').querySelectorAll('.checkin-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function confirmarCheckin() {
+  if (!checkinData.energia || !checkinData.dolor || !checkinData.sueno) {
+    showToast('Completá las 3 preguntas'); return;
+  }
+  localStorage.setItem('gymcoach_checkin', JSON.stringify({ ...checkinData, fecha: new Date().toISOString() }));
+  document.getElementById('modal-checkin').classList.remove('visible');
+  const resumen = `Energía: ${checkinData.energia} · Dolor: ${checkinData.dolor} · Sueño: ${checkinData.sueno}`;
+  showToast('Check-in guardado ✓');
+  const chatInput = document.getElementById('chat-input');
+  chatInput.value = `Voy a entrenar. Check-in: ${resumen}`;
+  sendMessage();
+}
+
+function mostrarPostSesion() {
+  postSesionData = {};
+  document.querySelectorAll('#modal-postcesion .checkin-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('modal-postcesion').classList.add('visible');
+}
+
+function selectPost(campo, valor, btn) {
+  postSesionData[campo] = valor;
+  btn.closest('.checkin-options').querySelectorAll('.checkin-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function confirmarPostSesion() {
+  document.getElementById('modal-postcesion').classList.remove('visible');
+  const resumen = `RPE: ${postSesionData.rpe || 'N/D'} · Dolor post: ${postSesionData.dolor || 'N/D'} · Rendimiento: ${postSesionData.rendimiento || 'N/D'}`;
+  localStorage.setItem('gymcoach_post_sesion', JSON.stringify({ ...postSesionData, fecha: new Date().toISOString() }));
+  const chatInput = document.getElementById('chat-input');
+  chatInput.value = `Terminé la sesión. Feedback post-sesión — ${resumen}. Generá el reporte final clínico completo.`;
+  sendMessage();
+  setTimeout(() => { conversationHistory = []; }, 3000);
+}
+
+// ═══════════════════════════════════════
+// PASO 3 — PRE-FILL INTELIGENTE
+// ═══════════════════════════════════════
+function cargarPrefill(ejercicio) {
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  const registros = historial.filter(r => r.ejercicio === ejercicio);
+  const hint = document.getElementById('prefill-hint');
+  const data = document.getElementById('prefill-data');
+  const sug = document.getElementById('prefill-suggestion');
+
+  if (registros.length === 0) {
+    hint.classList.remove('visible');
+    return;
+  }
+
+  // Último registro
+  const ultimo = registros[registros.length - 1];
+  const maxKg = Math.max(...ultimo.sets.map(s => parseFloat(s.kg) || 0));
+  const setsStr = ultimo.sets.map(s => `${s.reps}r × ${s.kg}kg`).join(' · ');
+  data.textContent = `${ultimo.fecha} → ${setsStr}`;
+
+  // Sugerencia de progresión: si hay 2+ registros, comparar maxKg
+  if (registros.length >= 2) {
+    const anterior = registros[registros.length - 2];
+    const maxKgAnt = Math.max(...anterior.sets.map(s => parseFloat(s.kg) || 0));
+    const maxReps = Math.max(...ultimo.sets.map(s => parseInt(s.reps) || 0));
+
+    // Lógica doble progresión: si completó 12+ reps → subir peso
+    if (maxReps >= 12) {
+      const esCompuesto = ['press','prensa','sentadilla','remo','jalón','peso muerto'].some(k => ejercicio.toLowerCase().includes(k));
+      const incremento = esCompuesto ? 5 : 2.5;
+      sug.textContent = `↑ Sugerencia: probá ${maxKg + incremento} kg esta sesión (reps ≥12 en la última)`;
+      sug.style.display = 'block';
+    } else if (maxKg > maxKgAnt) {
+      sug.textContent = `↑ Subiste ${(maxKg - maxKgAnt).toFixed(1)} kg desde la sesión anterior. Mantené si el tempo fue bueno.`;
+      sug.style.display = 'block';
+    } else {
+      sug.style.display = 'none';
+    }
+  } else {
+    sug.style.display = 'none';
+  }
+
+  // Pre-rellenar los sets con el último registro
+  setsData = ultimo.sets.map(s => ({ reps: s.reps, kg: s.kg, rpe: s.rpe || '' }));
+  renderSetsUI(setsData.length);
+  hint.classList.add('visible');
+}
+
+// ═══════════════════════════════════════
+// PASO 4 — ALTA CLÍNICA DORSAL
+// ═══════════════════════════════════════
+function altaDorsal() {
+  if (!confirm('¿Confirmás que el dorsal izquierdo está sin dolor y das de alta el protocolo de protección?\n\nEsto quedará registrado con fecha de hoy.')) return;
+  const fecha = new Date().toISOString().split('T')[0];
+  localStorage.setItem('gymcoach_dorsal_alta', fecha);
+  const alerta = document.getElementById('dorsal-alert');
+  alerta.innerHTML = `✓ Dorsal: ALTA CLÍNICA confirmada el ${fecha}`;
+  alerta.style.borderColor = 'rgba(125,247,196,0.3)';
+  alerta.style.background = 'rgba(125,247,196,0.06)';
+  alerta.style.color = 'var(--accent2)';
+  showToast('Alta dorsal registrada ✓');
+  // Notificar al coach
+  setTimeout(() => {
+    const chatInput = document.getElementById('chat-input');
+    chatInput.value = `Alta clínica confirmada para el dorsal izquierdo en fecha ${fecha}. Cero dolor. Podemos retomar protocolo normal.`;
+    sendMessage();
+  }, 800);
+}
+
+// ═══════════════════════════════════════
+// PASO 5 — FALLBACK DE MODELOS GEMINI
+// ═══════════════════════════════════════
+const GEMINI_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash-8b',
+];
+let modeloActivo = null;
+
+async function fetchGeminiConFallback(body, apiKey) {
+  const modelos = modeloActivo ? [modeloActivo, ...GEMINI_MODELS.filter(m => m !== modeloActivo)] : GEMINI_MODELS;
+  for (const modelo of modelos) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      const data = await res.json();
+      if (data.error && (data.error.code === 404 || data.error.status === 'NOT_FOUND' || data.error.message?.includes('not found'))) continue;
+      if (data.candidates && data.candidates[0]) {
+        if (modeloActivo !== modelo) {
+          modeloActivo = modelo;
+          const badge = document.getElementById('model-badge');
+          if (badge) badge.textContent = modelo;
+          localStorage.setItem('gymcoach_modelo', modelo);
+        }
+        return data;
+      }
+      if (data.error) return data; // error real (auth, quota), no seguir
+    } catch(e) { continue; }
+  }
+  return { error: { message: 'No se pudo conectar con ningún modelo Gemini disponible.' } };
+}
+
+const PROMPT_V2 = `ROL: Coach Biomecánico Clínico. Atleta: Juan Martín Atencio, 46a, 95kg.
+Sin motivación. Sin nutrición salvo pedido. Precisión fisiológica. Sin condescendencia.
+
+RESTRICCIONES PERMANENTES:
+PA ALTA: Nunca Valsalva. Respirar todo el recorrido. Descanso mínimo 90s en compuestos. Sin fallo absoluto. Preferir 10-15 reps. Parar ante mareos o cefalea.
+DORSAL: ver ESTADO CLÍNICO abajo. Si ACTIVO: sin jalones/remos pesados/estiramientos dorsal profundo. Carga sin riesgo=95%, moderado=75-80%. Día B=rehabilitación activa.
+Excéntrica 3s. Descanso 2-3min innegociable en todos los ejercicios.
+
+FLUJO SESIÓN — cuando recibe check-in o "Voy a entrenar":
+Indicar qué Día toca. Presentar ejercicios de a uno con formato compacto:
+Ej N°X/Total | NOMBRE | Series×Reps | Peso sugerido | Descanso | Dorsal: BAJO/MOD/VERIFICAR
+Sugerencia biomecánica en máximo 1-2 líneas. Agregar ⚠️ DORSAL si aplica. Esperar feedback antes del siguiente ejercicio.
+
+CIERRE: Reporte con ejercicios completados, progresión, estado SNC, párrafo clínico para próxima sesión.`;
+
+
+// ═══════════════════════════════════════
 // KNOWLEDGE DIGEST + PROMPT SISTEMA
 // ═══════════════════════════════════════
 function buildSystemPrompt() {
@@ -1106,46 +1608,28 @@ function buildSystemPrompt() {
   const ultimoDay = localStorage.getItem('gymcoach_ultimo_dia') || 'C';
   const diaActual = calcularDiaActual(ultimoDay);
 
+  // Leer datos adicionales
+  const checkin = JSON.parse(localStorage.getItem('gymcoach_checkin') || '{}');
+  const postSesion = JSON.parse(localStorage.getItem('gymcoach_post_sesion') || '{}');
+  const dorsalAlta = localStorage.getItem('gymcoach_dorsal_alta') || '';
+  const hoy = new Date().toISOString().split('T')[0];
+  const checkinHoy = checkin.fecha && checkin.fecha.startsWith(hoy) ? checkin : null;
+  const postHoy = postSesion.fecha && postSesion.fecha.startsWith(hoy) ? postSesion : null;
+
   return `${PROMPT_V2}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-KNOWLEDGE DIGEST — BASE CIENTÍFICA ACTIVA
+BASE CIENTÍFICA (aplicar siempre)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HIPERTROFIA: Rango 6-20 reps, RIR 1-3. Volumen: 10-20 series/semana/grupo. Excéntrica 3-4s. Descanso 2-3min compuestos, 1-2min aislamiento. Frecuencia mínima 2x/sem. Doble progresión: subir peso cuando alcances el límite superior de reps.
 
-Esta sección contiene los principios destilados de la biblioteca clínica del atleta (105 documentos). Aplicar siempre. Prioridad: evidencia sobre convención.
+ATLETA MASTER >40a: Recuperación más lenta (48-72h). Tejido conectivo adapta más lento que músculo: no más de 10% incremento semanal en tendones. Mínimo 1.6g proteína/kg/día. Fuerza=mejor intervención contra sarcopenia.
 
-── HIPERTROFIA (Schoenfeld et al.) ──
-• Rango óptimo para hipertrofia: 6–20 rep con RIR 1–3. Rangos altos (15–30) son igualmente efectivos si se llega cerca del fallo. Rangos bajos (1–5) priorizan fuerza neuronal.
-• Volumen efectivo: 10–20 series semanales por grupo muscular. Atleta avanzado puede tolerar extremo superior. Señal de sobrevolumen: pérdida de rendimiento sesión a sesión.
-• Tempo: excéntrica controlada (3–4s) maximiza tensión mecánica y daño muscular. El componente concéntrico puede ser explosivo. Isométrico al final del ROM aumenta activación.
-• Descanso entre series: 2–3 min para ejercicios compuestos, 1–2 min para aislamiento. Reducir descanso no mejora hipertrofia y perjudica la carga absoluta.
-• Frecuencia: 2x/semana por grupo muscular es el umbral mínimo para maximizar síntesis proteica. Sistema rotativo A/B/C de JM cumple este criterio.
-• Progresión: sobrecarga progresiva es el driver principal. Doblar rep antes de subir peso (método doble progresión). Incrementos de 2.5 kg en ejercicios de aislamiento, 5 kg en compuestos.
+BIOMECÁNICA (McGill): Bracing (no hollow) bajo carga. Espina neutra siempre. En prensa: sin retroversión pélvica al final del recorrido. El dorsal estabiliza activamente en TODOS los ejercicios con carga en manos.
 
-── ATLETA MASTER (>40 años, literatura específica) ──
-• Recuperación post-excéntrica: atletas master (40–50 años) muestran recuperación más lenta (48–72h vs 24–36h en jóvenes) tras trabajo excéntrico pesado de tren inferior. Ajustar rotación.
-• Testosterona y entrenamiento: series de 4–6 rep al 85–90% 1RM con descansos largos producen mayor respuesta anabólica aguda que series de alto rep. Combinar con volumen moderado.
-• Tejido conectivo: tasa de síntesis de colágeno es significativamente más lenta. Los tendones y ligamentos requieren más tiempo de adaptación que el músculo. Progresar carga más gradualmente (no más de 10% semanal en ejercicios que carguen tendones).
-• Sarcopenia prevention: mínimo 1.6g proteína/kg/día. Entrenamiento de fuerza es la intervención más efectiva conocida contra la pérdida de masa muscular por edad.
-• Microbiota y síntesis muscular (papers 2024): diversidad del microbioma intestinal correlaciona positivamente con masa muscular y respuesta anabólica. La inflamación crónica de bajo grado (común en sedentarios >40) inhibe mTOR. El entrenamiento de fuerza reduce marcadores inflamatorios.
+PERIODIZACIÓN: Supercompensación 48-72h post-sesión intensa. Señales sobreentrenamiento: pérdida de tempo excéntrico, reducción de carga sin causa, RPE>9 sin correlación con carga, sueño deteriorado. DUP: variar rangos entre sesiones del mismo grupo.
 
-── BIOMECÁNICA CLÍNICA (McGill et al.) ──
-• Core stability: el objetivo no es fuerza, es control motor. Ejercicios como Pallof press, bird-dog y plancha enseñan a crear tensión sin movimiento (stiffness) protegiendo la columna lumbar.
-• Bracing vs. hollowing: el bracing (co-contracción de toda la musculatura del core) es superior para protección espinal bajo carga. No hollow (succión del abdomen) durante ejercicios con carga.
-• Espina neutra: mantener curvatura lumbar natural bajo carga. La flexión lumbar bajo carga (rounding) es el principal mecanismo de hernia discal. En prensa de piernas: no permitir retroversión pélvica excesiva al final del recorrido.
-• Cadena posterior: dorsal ancho actúa como estabilizador activo en TODOS los ejercicios con carga en las manos (incluso press plano). Monitorear en fase de lesión activa.
-
-── RECUPERACIÓN Y PERIODIZACIÓN ──
-• Supercompensación: el rendimiento óptimo ocurre 48–72h post-sesión intensa. La app debe sugerir días de descanso activo si el contexto indica fatiga acumulada.
-• Indicadores de sobreentrenamiento a monitorear activamente: (1) pérdida de tempo excéntrico, (2) reducción de carga sin causa aparente, (3) RPE subjetivo >9 sin correlación con carga, (4) sueño deteriorado.
-• Periodización ondulante diaria (DUP): variar rep ranges entre sesiones del mismo grupo muscular. Ej. Día A semana 1: 8–10 rep. Día A semana 2: 12–15 rep. Maximiza adaptaciones.
-
-── REGLAS DE PRESCRIPCIÓN PARA JM ATENCIO ──
-• Cargas históricas de referencia: Prensa piernas 112.5 kg · Press plano 55 kg · Extensión cuádriceps 50 kg
-• Estado dorsal: ACTIVO hasta "cero dolor confirmado" explícito
-• Factor de carga actual (ejercicios sin riesgo dorsal): 95% de histórico
-• Factor de carga (riesgo moderado): 75–80% de histórico
-• Protocolo Día B: Rehabilitación activa. Sin jalones ni remos pesados.
+REFERENCIAS JM: Prensa piernas 112.5kg · Press plano 55kg · Extensión cuádriceps 50kg
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTEXTO DE SESIÓN PREVIA
@@ -1154,48 +1638,21 @@ ${contextoPrevio || 'Sin sesiones previas registradas. Primera sesión del siste
 
 DÍA ACTUAL CALCULADO: ${diaActual}
 SESIONES COMPLETADAS — A: ${diasEntrenados.A} · B: ${diasEntrenados.B} · C: ${diasEntrenados.C}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ESTADO CLÍNICO ACTUALIZADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DORSAL IZQUIERDO: ${dorsalAlta ? `ALTA CLÍNICA confirmada el ${dorsalAlta}. Protocolo de protección CERRADO. Retomar entrenamiento normal.` : 'ACTIVO — protocolo de protección en curso. Sin jalones ni remos pesados.'}
+PRESIÓN ARTERIAL: ALTA (hipertensión) — PERMANENTE. Restricciones: (1) Evitar Valsalva — respirar durante todo el recorrido. (2) Descanso mínimo 90s entre series compuestas. (3) No fallo absoluto en compuestos pesados. (4) Detener si mareos, visión borrosa o cefalea. (5) Preferir 10-15 reps sobre rangos 1-5 máximos.
+OBJETIVO PRIMARIO: Pérdida de grasa + mantenimiento muscular. Priorizar intensidad sobre volumen absoluto.
+
+${checkinHoy ? `CHECK-IN DE HOY (${hoy}):
+Energía: ${checkinHoy.energia} · Dolor: ${checkinHoy.dolor} · Sueño: ${checkinHoy.sueno}
+→ Ajustar carga: energía baja o dolor moderado = reducir 10-15%.` : 'CHECK-IN: No registrado hoy.'}
+
+${postHoy ? `FEEDBACK ÚLTIMA SESIÓN: RPE ${postHoy.rpe} · Dolor post: ${postHoy.dolor} · Rendimiento: ${postHoy.rendimiento}` : ''}
 `;
 }
-
-const PROMPT_V2 = `PROMPT v2.0 — COACH BIOMECÁNICO CLÍNICO
-Caso: Juan Martín Atencio | Versión: 2.0
-
-0. META-INSTRUCCIÓN Y ROL (CRÍTICO)
-Actúa como Coach Biomecánico Clínico y Especialista en Rehabilitación Funcional. No eres un animador de gimnasio. Combinás biomecánica clínica, fisiología del tejido conectivo y programación de fuerza para atletas con historial de lesión activa.
-
-Regla de Oro: No asesorarás sobre nutrición, dietas ni suplementación a menos que se solicite explícitamente. Enfoque 100% mecánico, clínico y de ejecución. Cero condescendencia. Cero frases motivacionales. Comunicación con precisión fisiológica.
-
-1. DIAGNÓSTICO CLÍNICO
-Atleta: Juan Martín Atencio, 46 años, 95 kg.
-Estado Estructural CRÍTICO: Fase de remodelación tisular activa por microtrauma (tirón) en dorsal ancho izquierdo (10/04/2026). Estado ACTIVO hasta reporte explícito "cero dolor confirmado".
-Estatus: Fase de alto rendimiento con supercompensación.
-
-2. REGLAS ESTRICTAS DE PROTECCIÓN BIOMECÁNICA
-2.1 Mientras dorsal ACTIVO, están PROHIBIDOS: jalones, remos con carga isotónica pesada, estiramientos profundos del dorsal, ejercicios con co-contracción isométrica intensa del dorsal.
-2.2 Escala de carga: Sin riesgo dorsal → 95% histórico. Riesgo moderado → 75-80% histórico. Contraindicado → sustituir.
-2.3 Día B = Rehabilitación Activa: solo isométrico bajo, curl predicador 70%, movilidad manguito rotador.
-2.4 En TODOS los ejercicios de tren inferior recordar: "Agarre neutro, no comprimas el dorsal por reflejo."
-2.5 Excéntrica estricta 3s. Descansos 2-3 min innegociables.
-
-3. FLUJO DE SESIÓN
-Cuando el atleta diga "Voy a entrenar":
-- Indicar qué Día toca y listar ejercicios del día
-- Presentar SOLO el Ejercicio 1 con formato exacto:
-
-Ejercicio N°[X] de [Total]:
-────────────────────────────
-Nombre:
-Series x Repeticiones:
-Peso sugerido:
-Descanso:
-Nivel de riesgo dorsal: [BAJO / MODERADO / VERIFICAR]
-Sugerencia biomecánica:
-⚠️ REVISIÓN DORSAL (si aplica):
-
-Esperar feedback antes de continuar. Si reporta dolor → acción clínica inmediata. Si riesgo de co-contracción dorsal → advertir ANTES con etiqueta ⚠️ REVISIÓN DORSAL.
-
-4. CIERRE DE SESIÓN
-Al terminar, generar Reporte Final con: ejercicios completados/modificados, análisis de sobrecarga progresiva, estado SNC (tempo, carga, RPE), y párrafo clínico de protección de contexto para próxima sesión.`;
 
 // ═══════════════════════════════════════
 // CÁLCULO DE DÍA
@@ -1286,6 +1743,8 @@ async function sendMessage() {
   addMessage('user', text);
 
   conversationHistory.push({ role: 'user', parts: [{ text }] });
+  // Limitar historial a últimos 10 mensajes para reducir tokens
+  if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
 
   // Thinking indicator
   const msgs = document.getElementById('messages');
@@ -1299,22 +1758,16 @@ async function sendMessage() {
     const systemPrompt = buildSystemPrompt();
 
     const contentsWithSystem = [
-      { role: "user", parts: [{ text: systemPrompt + "\n\nConfirmá que entendiste respondiendo SOLO: Sistema cargado." }] },
-      { role: "model", parts: [{ text: "Sistema cargado." }] },
+      { role: "user", parts: [{ text: systemPrompt }] },
       ...conversationHistory
     ];
 
     const body = {
       contents: contentsWithSystem,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
+      generationConfig: { temperature: 0.3, maxOutputTokens: 900 }
     };
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
-    );
-
-    const data = await res.json();
+    const data = await fetchGeminiConFallback(body, apiKey);
     thinking.remove();
 
     if (data.candidates && data.candidates[0]) {
@@ -1323,15 +1776,24 @@ async function sendMessage() {
       addMessage('assistant', reply);
 
       // Activar modo sesión
-      if (text.toLowerCase().includes('voy a entrenar')) activarSesion();
+      if (text.toLowerCase().includes('voy a entrenar') || text.toLowerCase().includes('check-in')) activarSesion();
 
-      // Ocultar alerta dorsal si el coach confirma cero dolor
+      // Alta dorsal si confirma cero dolor
       if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
-        document.getElementById('dorsal-alert').style.display = 'none';
+        const alta = localStorage.getItem('gymcoach_dorsal_alta');
+        if (!alta) {
+          const fecha = new Date().toISOString().split('T')[0];
+          localStorage.setItem('gymcoach_dorsal_alta', fecha);
+        }
+        const alerta = document.getElementById('dorsal-alert');
+        if (alerta) alerta.style.display = 'none';
       }
 
-      // Guardar contexto al cerrar
-      if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine') || text.toLowerCase().includes('cerrar sesión')) {
+      // Post-sesión feedback modal
+      if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine')) {
+        checkAndSaveContext(reply);
+        setTimeout(mostrarPostSesion, 800);
+      } else if (text.toLowerCase().includes('cerrar sesión')) {
         checkAndSaveContext(reply);
       }
     } else if (data.error) {
@@ -1363,26 +1825,28 @@ function autoResize(el) {
 let sesionActiva = false;
 
 function activarSesion() {
+  mostrarCheckin();
+  return;
+  // (el código original queda como fallback post-checkin)
+}
+function activarSesionReal() {
   sesionActiva = true;
   document.getElementById('btn-cerrar-sesion').classList.add('visible');
   document.getElementById('descanso-card').classList.add('visible');
 }
 
 function cerrarSesion() {
-  const prompt = 'Terminé la sesión. Generá el reporte final clínico completo con todas las secciones del protocolo.';
-  document.getElementById('chat-input').value = prompt;
-  sendMessage();
   document.getElementById('btn-cerrar-sesion').classList.remove('visible');
   document.getElementById('descanso-card').classList.remove('visible');
   sesionActiva = false;
-  // Resetear historial de conversación para liberar memoria
-  // Se hace con delay para que sendMessage() alcance a usar el history actual
-  setTimeout(() => { conversationHistory = []; }, 3000);
+  cancelTimer();
+  // Mostrar modal de feedback post-sesión (que al confirmar enviará el reporte)
+  mostrarPostSesion();
 }
 
 function checkAndSaveContext(replyText) {
   const match = replyText.match(/Sesión[\s\S]{0,1200}próxima sesión/i);
-  const toSave = match ? match[0] : replyText.slice(0, 800);
+  const toSave = match ? match[0].slice(0, 500) : replyText.slice(0, 400);
   const fecha = new Date().toLocaleDateString('es-AR');
   localStorage.setItem('gymcoach_contexto_previo', `[${fecha}] ${toSave}`);
   localStorage.setItem('gymcoach_ultimo_backup', Date.now().toString());
@@ -1394,9 +1858,9 @@ function checkAndSaveContext(replyText) {
   localStorage.setItem('gymcoach_ultimo_dia', dia);
   updateDayUI();
 
-  // Auto-exportar historial como backup
+  // Auto-exportar historial como backup silencioso
   exportarHistorial(true);
-  showToast('Reporte guardado + backup exportado ✓');
+  showToast('Sesión guardada ✓');
 }
 
 function exportarHistorial(silencioso = false) {
@@ -1412,9 +1876,12 @@ function exportarHistorial(silencioso = false) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
+  a.style.display = 'none';
   a.href = url;
   a.download = `gymcoach_backup_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
   localStorage.setItem('gymcoach_ultimo_backup', Date.now().toString());
   document.getElementById('backup-banner').style.display = 'none';
@@ -1510,9 +1977,12 @@ ${linea}
   const blob = new Blob([reporte.trim()], {type: 'text/plain;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
+  a.style.display = 'none';
   a.href = url;
   a.download = `informe_tecnico_gymcoach_${new Date().toISOString().split('T')[0]}.txt`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
   showToast('Informe técnico generado ✓');
 }
@@ -1585,8 +2055,18 @@ function addSet() {
 
 document.addEventListener('change', function(e) {
   if (e.target.id === 'reg-ejercicio') {
-    document.getElementById('custom-ej-wrap').style.display =
-      e.target.value === '__custom__' ? 'block' : 'none';
+    const val = e.target.value;
+    document.getElementById('custom-ej-wrap').style.display = val === '__custom__' ? 'block' : 'none';
+    if (val && val !== '__custom__') cargarPrefill(val);
+    else { document.getElementById('prefill-hint').classList.remove('visible'); renderSetsUI(3); }
+  }
+  if (e.target.id === 'reg-dia') {
+    // Actualizar opciones de ejercicios según día seleccionado
+    const dia = e.target.value;
+    const sel = document.getElementById('reg-ejercicio');
+    // Reset prefill cuando cambia el día
+    document.getElementById('prefill-hint').classList.remove('visible');
+    renderSetsUI(3);
   }
 });
 
@@ -1622,6 +2102,8 @@ function guardarEjercicio() {
   renderProgresion();
   checkAlertasProgresion();
   showToast(`${ejercicio} guardado ✓`);
+  // Auto-start timer de descanso
+  startTimer();
 }
 
 function renderHistorialHoy() {
@@ -2026,10 +2508,29 @@ function iniciarApp() {
   renderProgresion();
   checkBackupAlert();
 
+  // Restaurar modelo activo
+  const savedModelo = localStorage.getItem('gymcoach_modelo');
+  if (savedModelo) {
+    modeloActivo = savedModelo;
+    const badge = document.getElementById('model-badge');
+    if (badge) badge.textContent = savedModelo;
+  }
+
+  // Verificar estado del dorsal
+  const dorsalAlta = localStorage.getItem('gymcoach_dorsal_alta');
+  const alertaEl = document.getElementById('dorsal-alert');
+  if (dorsalAlta && alertaEl) {
+    alertaEl.innerHTML = `✓ Dorsal: ALTA CLÍNICA confirmada el ${dorsalAlta}`;
+    alertaEl.style.borderColor = 'rgba(125,247,196,0.3)';
+    alertaEl.style.background = 'rgba(125,247,196,0.06)';
+    alertaEl.style.color = 'var(--accent2)';
+  }
+
   const hora = new Date().getHours();
   const saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
   const dia = getDiaActual();
-  addMessage('assistant', `${saludo}, Juan Martín. Sistema activado.\n\nContexto clínico cargado. Protocolo de protección dorsal activo.\n\nTe toca el **Día ${dia}** (${DIAS[dia]}).\n\nCuando estés listo para entrenar, decime "Voy a entrenar" y arrancamos.`);
+  const estadoDorsal = dorsalAlta ? `Dorsal izquierdo: alta clínica confirmada el ${dorsalAlta}.` : 'Protocolo de protección dorsal activo.';
+  addMessage('assistant', `${saludo}, Juan Martín. Sistema activado.\n\n${estadoDorsal} Presión arterial alta registrada — protocolo de carga adaptado.\n\nTe toca el **Día ${dia}** (${DIAS[dia]}).\n\nCuando estés listo, presioná "🏋️ Voy a entrenar" para el check-in de inicio.`);
 }
 </script>
 </body>
