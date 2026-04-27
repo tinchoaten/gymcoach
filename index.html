@@ -1195,6 +1195,54 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
   width: 100%;
 }
 
+
+/* ── OPCIONES DE CIERRE DE SESIÓN ── */
+.cierre-banner {
+  margin: 0 1.25rem 0.5rem;
+  background: var(--surface);
+  border: 1px solid rgba(200,245,90,0.25);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeUp 0.3s ease;
+}
+.cierre-banner.visible { display: flex; }
+.cierre-banner-title {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+.cierre-banner-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.cierre-btn-cerrar {
+  padding: 0.75rem;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cierre-btn-seguir {
+  padding: 0.75rem;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
 </style>
 </head>
 <body>
@@ -1479,6 +1527,16 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
       <button class="backup-btn" onclick="exportarHistorial()">Exportar ahora</button>
     </div>
 
+    <!-- Banner de opciones de cierre (aparece al terminar el último ejercicio) -->
+    <div class="cierre-banner" id="cierre-banner">
+      <div class="cierre-banner-title">✅ Último ejercicio completado</div>
+      <div style="font-size:0.82rem;color:var(--text2)">¿Cerramos la sesión o querés agregar algo más?</div>
+      <div class="cierre-banner-btns">
+        <button class="cierre-btn-cerrar" onclick="ocultarCierreBanner();cerrarSesion()">Cerrar sesión</button>
+        <button class="cierre-btn-seguir" onclick="ocultarCierreBanner()">Seguir entrenando</button>
+      </div>
+    </div>
+
     <div class="messages" id="messages"></div>
 
     <div class="input-area">
@@ -1722,7 +1780,9 @@ function confirmarCheckin() {
   if (!checkinData.energia || !checkinData.dolor || !checkinData.sueno) {
     showToast('Completá las 3 preguntas'); return;
   }
+  const sesionInicioTs = Date.now();
   localStorage.setItem('gymcoach_checkin', JSON.stringify({ ...checkinData, fecha: new Date().toISOString() }));
+  localStorage.setItem('gymcoach_sesion_inicio', String(sesionInicioTs));
   document.getElementById('modal-checkin').classList.remove('visible');
   // Activar sesión ANTES de enviar (evita que sendMessage reactive el modal)
   activarSesion();
@@ -1751,8 +1811,29 @@ function confirmarPostSesion() {
   const resumen = `RPE: ${postSesionData.rpe || 'N/D'} · Dolor post: ${postSesionData.dolor || 'N/D'} · Rendimiento: ${postSesionData.rendimiento || 'N/D'}`;
   localStorage.setItem('gymcoach_post_sesion', JSON.stringify({ ...postSesionData, fecha: new Date().toISOString() }));
   const chatInput = document.getElementById('chat-input');
-  chatInput.value = `Reporte de sesión — Feedback: ${resumen}. Generá el reporte final clínico completo.`;
-  sesionActiva = false; // Reset para permitir nueva sesión
+  // Calcular duración de la sesión
+  const inicioTs = parseInt(localStorage.getItem('gymcoach_sesion_inicio') || '0');
+  const duracionMin = inicioTs > 0 ? Math.round((Date.now() - inicioTs) / 60000) : null;
+  const duracionStr = duracionMin ? ` · ${duracionMin}min` : '';
+
+  // Construir resumen del historial de hoy para el reporte
+  const hoy = new Date().toISOString().split('T')[0];
+  const historialHoy = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]')
+    .filter(r => r.fecha === hoy);
+  const resumenEjercicios = historialHoy.map(r => {
+    const maxKg = Math.max(...r.sets.map(s => parseFloat(s.kg) || 0));
+    const setsStr = r.sets.map(s => `${s.reps}×${s.kg}kg`).join(' ');
+    return `${r.ejercicio}: ${setsStr}`;
+  }).join(' | ');
+
+  chatInput.value = `Cierre de sesión.${duracionStr} Feedback: ${resumen}.${resumenEjercicios ? ' Ejercicios registrados: ' + resumenEjercicios + '.' : ''} Generá el reporte de cierre en formato COMPACTO exactamente así:
+[Día X — DD/MM${duracionStr}] RPE: X · Dolor: X
+EJERCICIO 1: sets×reps · Xkg [↑/↓/= vs anterior si corresponde]
+EJERCICIO 2: ...
+Observación: [1 línea técnica clave]
+Próxima sesión (Día Y): [1 línea de foco]
+Máximo 8 líneas en total. Sin introducción, sin conclusión, sin análisis extenso.`;
+  sesionActiva = false;
   sendMessage();
   setTimeout(() => { conversationHistory = []; }, 3000);
 }
@@ -1985,7 +2066,12 @@ NO escribir más de un ejercicio por respuesta. NO usar tablas. NO usar listas d
 
 Criterio serie de aproximación: Sí en compuestos pesados (prensa, press, remo, sentadilla, peso muerto) y primer ejercicio del día siempre. No en aislamientos livianos o ejercicios de movilidad.
 
-CIERRE: Reporte con ejercicios completados, progresión, estado SNC, párrafo clínico para próxima sesión.`;
+CIERRE: Cuando recibe mensaje de cierre, generar reporte COMPACTO (máximo 8 líneas):
+Línea 1: [Día X — DD/MM · Xmin] RPE: X · Dolor: X
+Líneas 2-N: EJERCICIO: sets×reps · Xkg [↑ si subió carga vs historial]
+Penúltima: Observación: [1 línea técnica, sin relleno]
+Última: Próxima sesión (Día Y): [1 línea de foco concreto]
+NUNCA exceder 8 líneas. NUNCA agregar introducción, análisis de periodización ni conclusión.`;
 
 
 // ═══════════════════════════════════════
@@ -2232,6 +2318,14 @@ async function sendMessage() {
         // Activar modo sesión solo si no está ya activa
         if (text.toLowerCase().includes('estado de inicio') && !sesionActiva) activarSesion();
 
+        // Detectar si el coach acaba de presentar el ÚLTIMO ejercicio (Ej N°X/X)
+        // Para mostrar opción de cierre cuando el usuario confirme
+        const matchUltimoEj = replyFinal.match(/Ej\s*N[°o]?\s*(\d+)\/(\d+)/i);
+        if (matchUltimoEj && matchUltimoEj[1] === matchUltimoEj[2]) {
+          // Es el último ejercicio — marcar para trigger de cierre
+          localStorage.setItem('gymcoach_ultimo_ejercicio_pendiente', 'true');
+        }
+
         // Registro rápido: si el usuario confirmó que terminó y el coach anterior tenía un ejercicio
         if (sesionActiva && esConfirmacionDeEjercicio(text)) {
           // Buscar el ejercicio en los últimos mensajes del coach (el mensaje anterior al actual)
@@ -2245,6 +2339,14 @@ async function sendMessage() {
           }
           if (ejData) {
             setTimeout(() => abrirQuickReg(ejData, getDiaActual()), 600);
+          }
+
+          // Si era el último ejercicio → mostrar opciones de cierre después del registro
+          const ultimoPendiente = localStorage.getItem('gymcoach_ultimo_ejercicio_pendiente');
+          if (ultimoPendiente === 'true') {
+            localStorage.removeItem('gymcoach_ultimo_ejercicio_pendiente');
+            const delay = ejData ? 2000 : 800;
+            setTimeout(() => mostrarOpcionesCierre(), delay);
           }
         }
 
@@ -2303,22 +2405,24 @@ function activarSesion() {
   sesionActiva = true;
   document.getElementById('btn-cerrar-sesion').classList.add('visible');
   document.getElementById('descanso-card').classList.add('visible');
+  document.getElementById('cierre-banner').classList.remove('visible');
 }
 
 function cerrarSesion() {
   document.getElementById('btn-cerrar-sesion').classList.remove('visible');
   document.getElementById('descanso-card').classList.remove('visible');
+  document.getElementById('cierre-banner').classList.remove('visible');
+  localStorage.removeItem('gymcoach_ultimo_ejercicio_pendiente');
   sesionActiva = false;
   cancelTimer();
-  // Mostrar modal de feedback post-sesión (que al confirmar enviará el reporte)
   mostrarPostSesion();
 }
 
 function checkAndSaveContext(replyText) {
-  const match = replyText.match(/Sesión[\s\S]{0,1200}próxima sesión/i);
-  const toSave = match ? match[0].slice(0, 500) : replyText.slice(0, 400);
+  // El reporte ahora es compacto — guardar completo (máx 600 chars)
+  const toSave = replyText.trim().slice(0, 600);
   const fecha = new Date().toLocaleDateString('es-AR');
-  localStorage.setItem('gymcoach_contexto_previo', `[${fecha}] ${toSave}`);
+  localStorage.setItem('gymcoach_contexto_previo', toSave); // ya tiene fecha embebida en el formato
   localStorage.setItem('gymcoach_ultimo_backup', Date.now().toString());
 
   const dia = getDiaActual();
@@ -3152,6 +3256,22 @@ function cerrarQuickReg() {
   document.getElementById('modal-quick-reg').classList.remove('visible');
   qrEjercicioActual = '';
   qrSetsData = [];
+}
+
+
+// ═══════════════════════════════════════
+// CIERRE DE SESIÓN MEJORADO
+// ═══════════════════════════════════════
+
+function mostrarOpcionesCierre() {
+  document.getElementById('cierre-banner').classList.add('visible');
+  // Scroll al banner para que sea visible
+  const banner = document.getElementById('cierre-banner');
+  setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+function ocultarCierreBanner() {
+  document.getElementById('cierre-banner').classList.remove('visible');
 }
 
 // Exponer al scope global para el test runner (const de script no se auto-exponen como window.X en Chrome)
