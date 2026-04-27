@@ -1631,7 +1631,21 @@ DORSAL: ver ESTADO CLÍNICO abajo. Si ACTIVO: sin jalones/remos pesados/estirami
 Excéntrica 3s. Descanso: compuestos 3min mínimo (PA ALTA obliga el límite superior), aislamientos 2min. Innegociable.
 
 FLUJO SESIÓN — cuando recibe "Estado de inicio" (check-in completado):
-Indicar qué Día toca y presentar SOLO el ejercicio 1. Formato EXACTO obligatorio:
+PASO 0 — CALENTAMIENTO (presentar ANTES del Ej N°1, una sola vez al inicio de sesión):
+Indicar qué Día toca. Presentar rutina de calentamiento específica al grupo muscular del día.
+Formato del calentamiento:
+**Calentamiento — Día X (Grupo muscular)**
+1. Ejercicio · Duración o reps · Indicación clave
+2. ...
+3. ...
+(3 a 5 ejercicios, sin peso o peso mínimo. Terminar con: "Listo el calentamiento. Avisame cuando estés listo para el Ej N°1." y STOP — esperar confirmación del usuario.)
+
+Protocolos de calentamiento por día:
+Día A (Pierna/Hombros/Core): movilidad de cadera en círculos (20 rep c/lado), sentadilla de peso corporal (15 rep lentas), rotación de hombros sin peso (15 rep c/lado), plancha isométrica (20 seg), prensa al 30% del habitual (10 rep).
+Día B (Espalda/Bíceps): rotación torácica en cuadrupedia (10 rep c/lado), retracción escapular sin carga sostenida 2 seg (15 rep), remo en banda o peso mínimo al 30% (12 rep lentas), movilidad escapular dinámica (10 rep).
+Día C (Pecho/Tríceps): apertura torácica en rodillo o banco (30 seg), flexiones suaves con excéntrica 3s (10 rep), band pull-apart o rotación hombro anterior (15 rep), press con barra vacía o mancuernas livianas al 20% (10 rep).
+
+PASO 1 — EJERCICIOS: Después del calentamiento, presentar SOLO el ejercicio 1. Formato EXACTO obligatorio:
 Ej N°1/5 | NOMBRE EJERCICIO | 3×10-15 | 100kg | Descanso: 3min | Dorsal: BAJO
 Serie de aproximación: [Sí — 1×8 al 50% / No requerida] (incluir SIEMPRE este campo)
 Luego 1 línea de sugerencia biomecánica. Luego ⚠️ PA ALTA si aplica. STOP — esperar feedback.
@@ -1821,16 +1835,30 @@ async function sendMessage() {
 
     const body = {
       contents: contentsWithSystem,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1200 }
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1800 }
     };
 
     const data = await fetchGeminiConFallback(body, apiKey);
     thinking.remove();
 
     if (data.candidates && data.candidates[0]) {
-      const reply = data.candidates[0].content.parts[0].text;
-      conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
-      addMessage('assistant', reply);
+      const candidate = data.candidates[0];
+      // Extraer texto de forma robusta: concatenar todos los parts de tipo text
+      const parts = candidate?.content?.parts || [];
+      const reply = parts.map(p => p.text || '').join('').trim();
+      // Detectar truncamiento por límite de tokens
+      const finishReason = candidate.finishReason || '';
+      const textoCortado = finishReason === 'MAX_TOKENS' || reply.endsWith(':') || reply.endsWith('|');
+      if (!reply) {
+        thinking.remove();
+        addMessage('assistant', 'Error: respuesta vacía del modelo. Intentá de nuevo.');
+        return;
+      }
+      const replyFinal = textoCortado && finishReason === 'MAX_TOKENS'
+        ? reply + '\n\n_(respuesta cortada — continuá escribiendo para más detalle)_'
+        : reply;
+      conversationHistory.push({ role: 'model', parts: [{ text: replyFinal }] });
+      addMessage('assistant', replyFinal);
 
       // Activar modo sesión solo si no está ya activa
       // El modal de check-in se abre SOLO desde el botón "Voy a entrenar"
@@ -1850,10 +1878,10 @@ async function sendMessage() {
 
       // Post-sesión feedback modal
       if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine')) {
-        checkAndSaveContext(reply);
+        checkAndSaveContext(replyFinal);
         setTimeout(mostrarPostSesion, 800);
       } else if (text.toLowerCase().includes('cerrar sesión')) {
-        checkAndSaveContext(reply);
+        checkAndSaveContext(replyFinal);
       }
     } else if (data.error) {
       addMessage('assistant', `Error de API: ${data.error.message}\n\nVerificá tu API key en Configuración.`);
