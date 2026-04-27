@@ -1010,6 +1010,191 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
   padding: 1px 5px;
 }
 
+
+/* ── REGISTRO RÁPIDO — BOTTOM SHEET ── */
+.quick-reg-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+  align-items: flex-end;
+  justify-content: center;
+}
+.quick-reg-overlay.visible { display: flex; }
+
+.quick-reg-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 1.25rem 1.5rem 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.quick-reg-overlay.visible .quick-reg-sheet {
+  transform: translateY(0);
+}
+
+.quick-reg-handle {
+  width: 36px; height: 4px;
+  background: var(--border2);
+  border-radius: 2px;
+  margin: 0 auto -0.25rem;
+  flex-shrink: 0;
+}
+
+.quick-reg-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.quick-reg-title {
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.quick-reg-ej {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-family: var(--mono);
+  margin-top: 0.2rem;
+}
+.quick-reg-close {
+  background: none; border: none;
+  color: var(--text3); font-size: 1.2rem;
+  cursor: pointer; padding: 0 0 0 0.5rem;
+  flex-shrink: 0; line-height: 1;
+}
+
+.quick-reg-sugerido {
+  background: rgba(200,245,90,0.06);
+  border: 1px solid rgba(200,245,90,0.15);
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.quick-reg-sugerido span { color: var(--text3); }
+
+.quick-reg-sets-header {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 1fr;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+.quick-reg-sets-label {
+  font-size: 0.65rem;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.quick-reg-set-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+.quick-reg-set-num {
+  width: 28px; height: 28px;
+  background: var(--surface2);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text3);
+  display: flex; align-items: center; justify-content: center;
+}
+.quick-reg-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  padding: 0.55rem 0.5rem;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.quick-reg-input:focus { border-color: var(--accent); }
+
+.quick-reg-add-set {
+  padding: 0.5rem;
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  color: var(--text3);
+  font-size: 0.78rem;
+  font-family: var(--mono);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s;
+}
+.quick-reg-add-set:active { color: var(--accent); border-color: var(--accent); }
+
+.quick-reg-notas {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  padding: 0.6rem 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.quick-reg-notas:focus { border-color: var(--accent); }
+.quick-reg-notas::placeholder { color: var(--text3); }
+
+.quick-reg-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.quick-reg-save {
+  padding: 0.875rem;
+  background: var(--accent);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.quick-reg-save:active { opacity: 0.8; }
+.quick-reg-skip {
+  padding: 0.6rem;
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  width: 100%;
+}
+
 </style>
 </head>
 <body>
@@ -1193,6 +1378,47 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
       </div>
       <button class="btn-checkin-ok" onclick="confirmarPostSesion()">Guardar y cerrar sesión →</button>
       <button onclick="cancelarPostSesion()" style="padding:0.6rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-family:var(--mono);font-size:0.8rem;cursor:pointer;width:100%">Cancelar — volver a la sesión</button>
+    </div>
+  </div>
+
+
+  <!-- ── MODAL REGISTRO RÁPIDO (bottom sheet) ── -->
+  <div class="quick-reg-overlay" id="modal-quick-reg">
+    <div class="quick-reg-sheet">
+      <div class="quick-reg-handle"></div>
+      <div class="quick-reg-header">
+        <div>
+          <div class="quick-reg-title">Registrar ejercicio</div>
+          <div class="quick-reg-ej" id="qr-ejercicio-nombre">—</div>
+        </div>
+        <button class="quick-reg-close" onclick="cerrarQuickReg()" title="Saltar registro">✕</button>
+      </div>
+
+      <!-- Sugerido por el coach -->
+      <div class="quick-reg-sugerido" id="qr-sugerido">
+        <span>Coach sugirió:</span>
+        <strong id="qr-sugerido-texto">—</strong>
+      </div>
+
+      <!-- Sets -->
+      <div>
+        <div class="quick-reg-sets-header">
+          <div></div>
+          <div class="quick-reg-sets-label">Reps</div>
+          <div class="quick-reg-sets-label">Kg</div>
+          <div class="quick-reg-sets-label">RPE</div>
+        </div>
+        <div id="qr-sets-container" style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem"></div>
+        <button class="quick-reg-add-set" onclick="qrAddSet()" style="margin-top:0.4rem">+ Set</button>
+      </div>
+
+      <!-- Notas -->
+      <input class="quick-reg-notas" type="text" id="qr-notas" placeholder="Notas opcionales (ej: mantuve excéntrica)">
+
+      <div class="quick-reg-actions">
+        <button class="quick-reg-save" onclick="qrGuardar()">Guardar y continuar →</button>
+        <button class="quick-reg-skip" onclick="cerrarQuickReg()">Saltar registro</button>
+      </div>
     </div>
   </div>
 
@@ -2000,8 +2226,27 @@ async function sendMessage() {
         conversationHistory.push({ role: 'model', parts: [{ text: replyFinal }] });
         addMessage('assistant', replyFinal);
 
+        // Guardar el mensaje del coach para uso del registro rápido
+        ultimoMensajeCoach = replyFinal;
+
         // Activar modo sesión solo si no está ya activa
         if (text.toLowerCase().includes('estado de inicio') && !sesionActiva) activarSesion();
+
+        // Registro rápido: si el usuario confirmó que terminó y el coach anterior tenía un ejercicio
+        if (sesionActiva && esConfirmacionDeEjercicio(text)) {
+          // Buscar el ejercicio en los últimos mensajes del coach (el mensaje anterior al actual)
+          const mensajesCoach = conversationHistory
+            .filter(m => m.role === 'model')
+            .map(m => m.parts[0]?.text || '');
+          // Buscar desde el último mensaje hacia atrás
+          let ejData = null;
+          for (let i = mensajesCoach.length - 1; i >= 0 && !ejData; i--) {
+            ejData = parsearMensajeCoach(mensajesCoach[i]);
+          }
+          if (ejData) {
+            setTimeout(() => abrirQuickReg(ejData, getDiaActual()), 600);
+          }
+        }
 
         // Alta dorsal si confirma cero dolor
         if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
@@ -2761,6 +3006,152 @@ function iniciarApp() {
   const dia = getDiaActual();
   const estadoDorsal = dorsalAlta ? `Dorsal izquierdo: alta clínica confirmada el ${dorsalAlta}.` : 'Protocolo de protección dorsal activo.';
   addMessage('assistant', `${saludo}, Juan Martín. Sistema activado.\n\n${estadoDorsal} Presión arterial alta registrada — protocolo de carga adaptado.\n\nTe toca el **Día ${dia}** (${DIAS[dia]}).\n\nCuando estés listo, presioná "🏋️ Voy a entrenar" para el check-in de inicio.`);
+}
+
+
+// ═══════════════════════════════════════
+// REGISTRO RÁPIDO — BOTTOM SHEET
+// ═══════════════════════════════════════
+
+// Estado del registro rápido
+let qrSetsData = [];       // sets del modal rápido
+let qrEjercicioActual = ''; // ejercicio parseado del mensaje del coach
+let qrDiaActual = '';      // día actual de entrenamiento
+let ultimoMensajeCoach = ''; // último mensaje del coach (para parsear)
+
+// ── Parser del mensaje del coach ──
+// Formato esperado: "Ej N°1/5 | NOMBRE EJERCICIO | 3×10-15 | 100kg | Descanso: 3min | Dorsal: BAJO"
+function parsearMensajeCoach(texto) {
+  // Buscar línea con formato de ejercicio
+  const lineas = texto.split('\n');
+  for (const linea of lineas) {
+    // Detectar patrón: Ej N°X/Y | ... | series×reps | Xkg
+    const matchEj = linea.match(/Ej\s*N[°o]?\s*\d+\/\d+\s*\|([^|]+)\|([^|]+)\|([^|]+)/i);
+    if (!matchEj) continue;
+
+    const nombre = matchEj[1].trim();
+    const seriesReps = matchEj[2].trim(); // ej: "3×10-15" o "4×8-10"
+    const pesoStr = matchEj[3].trim();    // ej: "100kg" o "55 kg"
+
+    // Parsear series y reps
+    const matchSR = seriesReps.match(/(\d+)\s*[×x]\s*(\d+)(?:-(\d+))?/);
+    const series = matchSR ? parseInt(matchSR[1]) : 3;
+    const repsMin = matchSR ? parseInt(matchSR[2]) : 10;
+    const repsMax = matchSR && matchSR[3] ? parseInt(matchSR[3]) : repsMin;
+    // Usar el valor medio del rango como sugerencia
+    const repsSugeridas = Math.round((repsMin + repsMax) / 2);
+
+    // Parsear kg
+    const matchKg = pesoStr.match(/([\d.]+)\s*kg/i);
+    const kg = matchKg ? parseFloat(matchKg[1]) : 0;
+
+    return {
+      nombre,
+      series,
+      repsMin,
+      repsMax,
+      repsSugeridas,
+      kg,
+      sugeridoTexto: `${series}×${repsMin}${repsMax !== repsMin ? '-'+repsMax : ''} · ${kg > 0 ? kg+'kg' : 'sin peso'}`,
+    };
+  }
+  return null;
+}
+
+// ── Detectar si el usuario confirmó que terminó un ejercicio ──
+function esConfirmacionDeEjercicio(texto) {
+  const t = texto.toLowerCase().trim();
+  const triggers = ['listo', 'ok', 'ok listo', 'hecho', 'listo ✓', 'terminé el ejercicio',
+                    'listo para el siguiente', 'ok terminé', 'terminé', 'ok, listo'];
+  return triggers.some(tr => t === tr || t.startsWith(tr));
+}
+
+// ── Abrir el modal con datos del ejercicio actual ──
+function abrirQuickReg(ejercicioData, dia) {
+  qrEjercicioActual = ejercicioData.nombre;
+  qrDiaActual = dia || getDiaActual();
+
+  // Actualizar header
+  document.getElementById('qr-ejercicio-nombre').textContent = ejercicioData.nombre;
+  document.getElementById('qr-sugerido-texto').textContent = ejercicioData.sugeridoTexto;
+
+  // Inicializar sets con valores sugeridos
+  qrSetsData = Array.from({ length: ejercicioData.series }, () => ({
+    reps: String(ejercicioData.repsSugeridas),
+    kg: ejercicioData.kg > 0 ? String(ejercicioData.kg) : '',
+    rpe: '',
+  }));
+  qrRenderSets();
+
+  // Limpiar notas
+  document.getElementById('qr-notas').value = '';
+
+  // Mostrar
+  document.getElementById('modal-quick-reg').classList.add('visible');
+}
+
+// ── Renderizar los sets del modal rápido ──
+function qrRenderSets() {
+  const container = document.getElementById('qr-sets-container');
+  container.innerHTML = qrSetsData.map((s, i) => `
+    <div class="quick-reg-set-row">
+      <div class="quick-reg-set-num">${i + 1}</div>
+      <input class="quick-reg-input" type="number" inputmode="decimal" placeholder="Reps"
+        value="${s.reps}" oninput="qrSetsData[${i}].reps=this.value">
+      <input class="quick-reg-input" type="number" inputmode="decimal" step="0.5" placeholder="Kg"
+        value="${s.kg}" oninput="qrSetsData[${i}].kg=this.value">
+      <input class="quick-reg-input" type="number" inputmode="decimal" min="1" max="10" placeholder="—"
+        value="${s.rpe}" oninput="qrSetsData[${i}].rpe=this.value" title="RPE 1-10">
+    </div>
+  `).join('');
+}
+
+// ── Agregar set ──
+function qrAddSet() {
+  const ultimo = qrSetsData[qrSetsData.length - 1] || { reps: '', kg: '', rpe: '' };
+  qrSetsData.push({ reps: ultimo.reps, kg: ultimo.kg, rpe: '' });
+  qrRenderSets();
+}
+
+// ── Guardar desde el modal rápido ──
+function qrGuardar() {
+  if (!qrEjercicioActual) { cerrarQuickReg(); return; }
+
+  const sets = qrSetsData
+    .filter(s => s.reps && s.kg)
+    .map(s => ({ reps: s.reps, kg: s.kg, ...(s.rpe ? { rpe: s.rpe } : {}) }));
+
+  if (sets.length === 0) {
+    showToast('Ingresá al menos 1 set con reps y kg');
+    return;
+  }
+
+  const notas = document.getElementById('qr-notas').value.trim();
+  const fecha = new Date().toISOString().split('T')[0];
+  const registro = { fecha, dia: qrDiaActual, ejercicio: qrEjercicioActual, sets, notas };
+
+  const historial = JSON.parse(localStorage.getItem('gymcoach_historial') || '[]');
+  historial.push(registro);
+  localStorage.setItem('gymcoach_historial', JSON.stringify(historial));
+
+  // Actualizar UI de progresión y registro
+  renderHistorialHoy();
+  actualizarSelectorProgresion();
+  renderProgresion();
+  checkAlertasProgresion();
+
+  cerrarQuickReg();
+  showToast(`${qrEjercicioActual} registrado ✓`);
+
+  // Auto-start timer de descanso
+  startTimer();
+}
+
+// ── Cerrar el modal ──
+function cerrarQuickReg() {
+  document.getElementById('modal-quick-reg').classList.remove('visible');
+  qrEjercicioActual = '';
+  qrSetsData = [];
 }
 
 // Exponer al scope global para el test runner (const de script no se auto-exponen como window.X en Chrome)
