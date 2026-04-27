@@ -354,6 +354,7 @@ body {
 
 .input-area {
   padding: 0.875rem 1.25rem;
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   background: rgba(10,10,15,0.95);
   display: flex;
@@ -901,19 +902,43 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  /* evitar que el modal quede detrás de la barra de estado en móvil */
+  padding-top: max(1.5rem, env(safe-area-inset-top));
 }
 .modal-overlay.visible { display: flex; }
 .modal-box {
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem 1.5rem;
   width: 100%;
   max-width: 400px;
+  max-height: 90dvh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.modal-header-text { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0 0 0.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: color 0.15s;
+}
+.modal-close-btn:hover { color: var(--text); }
 .modal-title {
   font-family: var(--display);
   font-size: 1.1rem;
@@ -1095,9 +1120,12 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
   <!-- ── MODAL CHECK-IN DE INICIO ── -->
   <div class="modal-overlay" id="modal-checkin">
     <div class="modal-box">
-      <div>
-        <div class="modal-title">Check-in de sesión</div>
-        <div class="modal-subtitle">3 preguntas rápidas antes de arrancar</div>
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <div class="modal-title">Check-in de sesión</div>
+          <div class="modal-subtitle">3 preguntas rápidas antes de arrancar</div>
+        </div>
+        <button class="modal-close-btn" onclick="cancelarCheckin()" title="Cancelar">✕</button>
       </div>
       <div class="checkin-row">
         <div class="checkin-label">Energía hoy</div>
@@ -1124,15 +1152,19 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         </div>
       </div>
       <button class="btn-checkin-ok" onclick="confirmarCheckin()">Arrancar sesión →</button>
+      <button onclick="cancelarCheckin()" style="padding:0.6rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-family:var(--mono);font-size:0.8rem;cursor:pointer;width:100%">Cancelar — volver a la app</button>
     </div>
   </div>
 
   <!-- ── MODAL FEEDBACK POST-SESIÓN ── -->
   <div class="modal-overlay" id="modal-postcesion">
     <div class="modal-box">
-      <div>
-        <div class="modal-title">¿Cómo fue la sesión?</div>
-        <div class="modal-subtitle">Feedback rápido para el coach</div>
+      <div class="modal-header">
+        <div class="modal-header-text">
+          <div class="modal-title">¿Cómo fue la sesión?</div>
+          <div class="modal-subtitle">Feedback rápido para el coach</div>
+        </div>
+        <button class="modal-close-btn" onclick="cancelarPostSesion()" title="Cancelar">✕</button>
       </div>
       <div class="checkin-row">
         <div class="checkin-label">Esfuerzo general (RPE)</div>
@@ -1160,6 +1192,7 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         </div>
       </div>
       <button class="btn-checkin-ok" onclick="confirmarPostSesion()">Guardar y cerrar sesión →</button>
+      <button onclick="cancelarPostSesion()" style="padding:0.6rem;background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-family:var(--mono);font-size:0.8rem;cursor:pointer;width:100%">Cancelar — volver a la sesión</button>
     </div>
   </div>
 
@@ -1437,6 +1470,22 @@ function mostrarCheckin() {
   document.getElementById('modal-checkin').classList.add('visible');
 }
 
+function cancelarCheckin() {
+  document.getElementById('modal-checkin').classList.remove('visible');
+  checkinData = {};
+  // La sesión NO se activa — simplemente volvemos a la app sin cambios
+}
+
+function cancelarPostSesion() {
+  document.getElementById('modal-postcesion').classList.remove('visible');
+  postSesionData = {};
+  // La sesión sigue activa — restaurar UI de sesión activa
+  sesionActiva = true;
+  document.getElementById('btn-cerrar-sesion').classList.add('visible');
+  document.getElementById('descanso-card').classList.add('visible');
+  showToast('Sesión en curso — podés continuar');
+}
+
 function selectCheckin(campo, valor, btn) {
   checkinData[campo] = valor;
   btn.closest('.checkin-options').querySelectorAll('.checkin-btn').forEach(b => b.classList.remove('selected'));
@@ -1557,25 +1606,36 @@ function altaDorsal() {
 // ═══════════════════════════════════════
 // Modelos confirmados disponibles en esta cuenta (Google AI Studio, free tier, abril 2026)
 // API: v1beta + generateContent (sin streaming)
+// Orden de detección inicial (de más capaz a menos, para elegir el mejor disponible)
 const MODELOS_CANDIDATOS = [
-  'gemini-2.0-flash',           // Estable — primera opción
-  'gemini-2.0-flash-lite',      // Estable — más liviano
-  'gemini-2.5-flash',           // Estable — más capaz
-  'gemini-2.5-flash-lite',      // Estable — ultraliviano
-  'gemini-2.5-pro',             // Estable — máxima calidad
-  'gemini-3-flash-preview',     // Preview — default de la cuenta
+  'gemini-2.5-flash',           // Preferido — más capaz
+  'gemini-2.0-flash',           // Estable — segunda opción
+  'gemini-2.5-flash-lite',      // Ultraliviano
+  'gemini-2.0-flash-lite',      // Más liviano
+  'gemini-2.5-pro',             // Máxima calidad (límites estrictos)
+  'gemini-3-flash-preview',     // Preview
 ];
+
+// Orden de fallback cuando hay alta demanda (lite primero, evitar pro)
+const MODELOS_FALLBACK_DEMANDA = [
+  'gemini-2.0-flash-lite',      // Menor demanda, muy estable
+  'gemini-2.5-flash-lite',      // Ultraliviano
+  'gemini-2.0-flash',           // Estable
+  'gemini-2.5-flash',           // El preferido (si ya falló, probar igual)
+  'gemini-3-flash-preview',     // Último recurso preview
+];
+
 let MODELO = '';
 let modeloActivo = '';
+// Modelos con alta demanda en esta sesión (no persistir — se resetea al recargar)
+const modelosDemandaAlta = new Set();
 
 async function detectarModelo(key) {
-  // Primero intentar el modelo guardado
   const guardado = localStorage.getItem('gymcoach_modelo');
   if (guardado) {
     const ok = await testModelo(guardado, key);
     if (ok) { setModelo(guardado); return true; }
   }
-  // Probar cada candidato
   for (const m of MODELOS_CANDIDATOS) {
     const ok = await testModelo(m, key);
     if (ok) { setModelo(m); return true; }
@@ -1603,22 +1663,68 @@ function setModelo(m) {
   if (badge) badge.textContent = m.replace('gemini-', '');
 }
 
+// Actualiza el badge sin guardar en localStorage (modelo temporal por demanda)
+function setBadgeTemporal(m) {
+  const badge = document.getElementById('model-badge');
+  if (badge) badge.textContent = m.replace('gemini-', '') + ' ↙';
+}
+
 async function fetchGeminiConFallback(body, apiKey) {
   if (!MODELO) {
     const ok = await detectarModelo(apiKey);
     if (!ok) return { error: { message: 'Ningún modelo disponible con esta API key. Verificá en aistudio.google.com/apikey' } };
   }
+
+  // Intentar con el modelo activo
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${apiKey}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   );
   const data = await res.json();
-  // Si falla el modelo actual, resetear y reintentar
+
+  // 404 / not found → resetear y reintentar (modelo dejó de existir)
   if (data.error && (data.error.code === 404 || (data.error.message || '').includes('not found'))) {
     MODELO = '';
     localStorage.removeItem('gymcoach_modelo');
     return fetchGeminiConFallback(body, apiKey);
   }
+
+  // Alta demanda (429/503) → iterar sobre modelos alternativos automáticamente
+  if (data.error) {
+    const msg = (data.error.message || '').toLowerCase();
+    const code = data.error.code || 0;
+    const esHighDemand = code === 429 || code === 503 || msg.includes('high demand') || msg.includes('overloaded') || msg.includes('quota');
+    if (esHighDemand) {
+      modelosDemandaAlta.add(MODELO);
+      const thinkingBubble = document.querySelector('.msg.thinking .msg-bubble');
+      // Probar cada alternativo en orden hasta que uno responda
+      for (const alternativo of MODELOS_FALLBACK_DEMANDA) {
+        if (modelosDemandaAlta.has(alternativo) || alternativo === MODELO) continue;
+        if (thinkingBubble) thinkingBubble.textContent = `${MODELO.replace('gemini-','')} con alta demanda → probando ${alternativo.replace('gemini-','')}...`;
+        setBadgeTemporal(alternativo);
+        try {
+          const resAlt = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${alternativo}:generateContent?key=${apiKey}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+          );
+          const dataAlt = await resAlt.json();
+          if (dataAlt.candidates && dataAlt.candidates[0]) {
+            setBadgeTemporal(alternativo);
+            return dataAlt;
+          }
+          // Este también tiene alta demanda → marcarlo y continuar
+          const msgAlt = (dataAlt.error?.message || '').toLowerCase();
+          const codeAlt = dataAlt.error?.code || 0;
+          if (codeAlt === 429 || codeAlt === 503 || msgAlt.includes('high demand') || msgAlt.includes('overloaded')) {
+            modelosDemandaAlta.add(alternativo);
+          } else {
+            break; // error distinto a demanda — devolver data original
+          }
+        } catch(e) { break; }
+      }
+    }
+  }
+
   return data;
 }
 
@@ -1825,70 +1931,106 @@ async function sendMessage() {
   msgs.appendChild(thinking);
   msgs.scrollTop = msgs.scrollHeight;
 
-  try {
-    const systemPrompt = buildSystemPrompt();
+  // Retry automático para high demand (hasta 2 reintentos con backoff)
+  const MAX_RETRIES = 2;
+  let lastError = null;
 
-    const contentsWithSystem = [
-      { role: "user", parts: [{ text: systemPrompt }] },
-      ...conversationHistory
-    ];
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      if (attempt > 0) {
+        const waitSeg = attempt * 6;
+        const thinkingBubble = thinking.querySelector('.msg-bubble');
+        if (thinkingBubble) thinkingBubble.textContent = `Reintentando en ${waitSeg}s... (intento ${attempt}/${MAX_RETRIES})`;
+        await new Promise(r => setTimeout(r, waitSeg * 1000));
+      }
 
-    const body = {
-      contents: contentsWithSystem,
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1800 }
-    };
+      const systemPrompt = buildSystemPrompt();
+      const contentsWithSystem = [
+        { role: "user", parts: [{ text: systemPrompt }] },
+        ...conversationHistory
+      ];
+      const body = {
+        contents: contentsWithSystem,
+        generationConfig: { temperature: 0.3, maxOutputTokens: 1800 }
+      };
 
-    const data = await fetchGeminiConFallback(body, apiKey);
-    thinking.remove();
+      const data = await fetchGeminiConFallback(body, apiKey);
 
-    if (data.candidates && data.candidates[0]) {
-      const candidate = data.candidates[0];
-      // Extraer texto de forma robusta: concatenar todos los parts de tipo text
-      const parts = candidate?.content?.parts || [];
-      const reply = parts.map(p => p.text || '').join('').trim();
-      // Detectar truncamiento por límite de tokens
-      const finishReason = candidate.finishReason || '';
-      const textoCortado = finishReason === 'MAX_TOKENS' || reply.endsWith(':') || reply.endsWith('|');
-      if (!reply) {
+      // Detectar high demand / overloaded antes de procesar
+      if (data.error) {
+        const msg = (data.error.message || '').toLowerCase();
+        const code = data.error.code || 0;
+        // 429 = rate limit, 503 = overloaded, "high demand" en el mensaje
+        const esHighDemand = code === 429 || code === 503 || msg.includes('high demand') || msg.includes('overloaded') || msg.includes('quota');
+        const esKeyInvalida = code === 400 || code === 401 || code === 403 || msg.includes('api key') || msg.includes('invalid');
+
+        if (esHighDemand && attempt < MAX_RETRIES) {
+          lastError = data.error;
+          continue; // reintentar
+        }
+
         thinking.remove();
-        addMessage('assistant', 'Error: respuesta vacía del modelo. Intentá de nuevo.');
+        if (esHighDemand) {
+          const intentados = [...modelosDemandaAlta].map(m => m.replace('gemini-','')).join(', ');
+          addMessage('assistant', `⚠️ Todos los modelos disponibles tienen alta demanda ahora mismo.\n\nModelos intentados: ${intentados || MODELO.replace('gemini-','')}\n\nEsto es temporal. Esperá unos minutos y volvé a intentar.`);
+        } else if (esKeyInvalida) {
+          addMessage('assistant', `❌ API key inválida o sin permisos.\n\nVerificá tu clave en Configuración → "Probar conexión API".`);
+        } else {
+          addMessage('assistant', `Error de API (${code}): ${data.error.message}`);
+        }
         return;
       }
-      const replyFinal = textoCortado && finishReason === 'MAX_TOKENS'
-        ? reply + '\n\n_(respuesta cortada — continuá escribiendo para más detalle)_'
-        : reply;
-      conversationHistory.push({ role: 'model', parts: [{ text: replyFinal }] });
-      addMessage('assistant', replyFinal);
 
-      // Activar modo sesión solo si no está ya activa
-      // El modal de check-in se abre SOLO desde el botón "Voy a entrenar"
-      // activarSesion() internamente ya verifica sesionActiva para evitar loops
-      if (text.toLowerCase().includes('estado de inicio') && !sesionActiva) activarSesion();
+      thinking.remove();
 
-      // Alta dorsal si confirma cero dolor
-      if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
-        const alta = localStorage.getItem('gymcoach_dorsal_alta');
-        if (!alta) {
-          const fecha = new Date().toISOString().split('T')[0];
-          localStorage.setItem('gymcoach_dorsal_alta', fecha);
+      if (data.candidates && data.candidates[0]) {
+        const candidate = data.candidates[0];
+        // Extraer texto de forma robusta: concatenar todos los parts de tipo text
+        const parts = candidate?.content?.parts || [];
+        const reply = parts.map(p => p.text || '').join('').trim();
+        // Detectar truncamiento por límite de tokens
+        const finishReason = candidate.finishReason || '';
+        if (!reply) {
+          addMessage('assistant', 'Error: respuesta vacía del modelo. Intentá de nuevo.');
+          return;
         }
-        const alerta = document.getElementById('dorsal-alert');
-        if (alerta) alerta.style.display = 'none';
-      }
+        const replyFinal = finishReason === 'MAX_TOKENS'
+          ? reply + '\n\n_(respuesta cortada — continuá escribiendo para más detalle)_'
+          : reply;
+        conversationHistory.push({ role: 'model', parts: [{ text: replyFinal }] });
+        addMessage('assistant', replyFinal);
 
-      // Post-sesión feedback modal
-      if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine')) {
-        checkAndSaveContext(replyFinal);
-        setTimeout(mostrarPostSesion, 800);
-      } else if (text.toLowerCase().includes('cerrar sesión')) {
-        checkAndSaveContext(replyFinal);
+        // Activar modo sesión solo si no está ya activa
+        if (text.toLowerCase().includes('estado de inicio') && !sesionActiva) activarSesion();
+
+        // Alta dorsal si confirma cero dolor
+        if (text.toLowerCase().includes('cero dolor confirmado') || text.toLowerCase().includes('cero dolor')) {
+          const alta = localStorage.getItem('gymcoach_dorsal_alta');
+          if (!alta) {
+            const fecha = new Date().toISOString().split('T')[0];
+            localStorage.setItem('gymcoach_dorsal_alta', fecha);
+          }
+          const alerta = document.getElementById('dorsal-alert');
+          if (alerta) alerta.style.display = 'none';
+        }
+
+        // Post-sesión feedback modal
+        if (text.toLowerCase().includes('terminé') || text.toLowerCase().includes('termine')) {
+          checkAndSaveContext(replyFinal);
+          setTimeout(mostrarPostSesion, 800);
+        } else if (text.toLowerCase().includes('cerrar sesión')) {
+          checkAndSaveContext(replyFinal);
+        }
       }
-    } else if (data.error) {
-      addMessage('assistant', `Error de API: ${data.error.message}\n\nVerificá tu API key en Configuración.`);
+      return; // éxito — salir del loop
+
+    } catch(e) {
+      lastError = e;
+      if (attempt === MAX_RETRIES) {
+        thinking.remove();
+        addMessage('assistant', `Error de conexión: ${e.message}\n\nVerificá tu conexión a internet e intentá de nuevo.`);
+      }
     }
-  } catch(e) {
-    thinking.remove();
-    addMessage('assistant', `Error de conexión: ${e.message}`);
   }
 }
 
@@ -2620,6 +2762,14 @@ function iniciarApp() {
   const estadoDorsal = dorsalAlta ? `Dorsal izquierdo: alta clínica confirmada el ${dorsalAlta}.` : 'Protocolo de protección dorsal activo.';
   addMessage('assistant', `${saludo}, Juan Martín. Sistema activado.\n\n${estadoDorsal} Presión arterial alta registrada — protocolo de carga adaptado.\n\nTe toca el **Día ${dia}** (${DIAS[dia]}).\n\nCuando estés listo, presioná "🏋️ Voy a entrenar" para el check-in de inicio.`);
 }
+
+// Exponer al scope global para el test runner (const de script no se auto-exponen como window.X en Chrome)
+window.__gymcoach = {
+  get MODELOS_CANDIDATOS()      { return MODELOS_CANDIDATOS; },
+  get MODELOS_FALLBACK_DEMANDA(){ return MODELOS_FALLBACK_DEMANDA; },
+  get modelosDemandaAlta()      { return modelosDemandaAlta; },
+  get DIAS()                    { return DIAS; },
+};
 </script>
 </body>
 </html>
