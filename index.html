@@ -406,6 +406,33 @@ body {
 .chat-input:focus { border-color: var(--accent); }
 .chat-input::placeholder { color: var(--text3); }
 
+.reg-manual-bar {
+  display: none;
+  padding: 0 1.25rem 0.5rem;
+}
+.reg-manual-bar.visible { display: flex; }
+.reg-manual-btn {
+  width: 100%;
+  padding: 0.55rem 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--border2);
+  border-radius: 10px;
+  color: var(--text2);
+  font-size: 0.78rem;
+  font-family: var(--mono);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+.reg-manual-btn:active {
+  background: var(--surface2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .send-btn {
   width: 40px; height: 40px;
   background: var(--accent);
@@ -1556,6 +1583,13 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
         </svg>
       </button>
     </div>
+
+    <!-- Botón de registro manual — visible solo durante sesión activa -->
+    <div class="reg-manual-bar" id="reg-manual-bar">
+      <button class="reg-manual-btn" onclick="abrirQuickRegManual()">
+        <span>📋</span> Registrar ejercicio manualmente
+      </button>
+    </div>
   </div>
 
   <!-- ── REGISTRO PANEL ── -->
@@ -1774,6 +1808,7 @@ function cancelarPostSesion() {
   // La sesión sigue activa — restaurar UI de sesión activa
   sesionActiva = true;
   document.getElementById('btn-cerrar-sesion').classList.add('visible');
+  document.getElementById('reg-manual-bar').classList.add('visible');
   document.getElementById('descanso-card').classList.add('visible');
   showToast('Sesión en curso — podés continuar');
 }
@@ -2430,6 +2465,7 @@ function activarSesion() {
   if (sesionActiva) return;
   sesionActiva = true;
   document.getElementById('btn-cerrar-sesion').classList.add('visible');
+  document.getElementById('reg-manual-bar').classList.add('visible');
   document.getElementById('descanso-card').classList.add('visible');
   document.getElementById('cierre-banner').classList.remove('visible');
 }
@@ -2438,6 +2474,7 @@ function cerrarSesion() {
   document.getElementById('btn-cerrar-sesion').classList.remove('visible');
   document.getElementById('descanso-card').classList.remove('visible');
   document.getElementById('cierre-banner').classList.remove('visible');
+  document.getElementById('reg-manual-bar').classList.remove('visible');
   localStorage.removeItem('gymcoach_ultimo_ejercicio_pendiente');
   sesionActiva = false;
   cancelTimer();
@@ -3247,6 +3284,39 @@ function abrirQuickReg(ejercicioData, dia) {
 
   // Mostrar
   document.getElementById('modal-quick-reg').classList.add('visible');
+}
+
+// ── Abrir modal de registro manualmente (máquina ocupada, etc.) ──
+function abrirQuickRegManual() {
+  // Intentar usar el último ejercicio presentado por el coach
+  const mensajesCoach = conversationHistory
+    .filter(m => m.role === 'model')
+    .map(m => m.parts[0]?.text || '');
+
+  let ejData = null;
+  for (let i = mensajesCoach.length - 1; i >= Math.max(0, mensajesCoach.length - 5) && !ejData; i--) {
+    if (/Ej\s*N[°o]?\s*\d+\/\d+/i.test(mensajesCoach[i])) {
+      ejData = parsearMensajeCoach(mensajesCoach[i]);
+    }
+  }
+
+  if (ejData) {
+    abrirQuickReg(ejData, getDiaActual());
+  } else {
+    // Sin ejercicio en el history — abrir modal vacío
+    qrEjercicioActual = '';
+    qrDiaActual = getDiaActual();
+    document.getElementById('qr-ejercicio-nombre').textContent = '—';
+    document.getElementById('qr-sugerido-texto').textContent = 'Completá los datos manualmente';
+    const aproxSection = document.getElementById('qr-aprox-section');
+    if (aproxSection) aproxSection.style.display = 'none';
+    const kgLabel = document.getElementById('qr-kg-label');
+    if (kgLabel) kgLabel.textContent = 'Kg';
+    qrSetsData = [{ reps: '', kg: '', rpe: '' }];
+    qrRenderSets();
+    document.getElementById('qr-notas').value = '';
+    document.getElementById('modal-quick-reg').classList.add('visible');
+  }
 }
 
 // ── Renderizar los sets del modal rápido ──
