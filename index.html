@@ -1449,11 +1449,18 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
       </div>
 
       <!-- Sets -->
+      <!-- Aproximación (si aplica) -->
+      <div id="qr-aprox-section" style="display:none;align-items:flex-start;gap:0.5rem;background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);border-radius:8px;padding:0.6rem 0.875rem">
+        <span style="font-size:0.78rem;color:var(--warn);font-family:var(--mono)">⚡ Aprox:</span>
+        <span id="qr-aprox-texto" style="font-size:0.78rem;color:var(--text2);font-family:var(--mono)"></span>
+      </div>
+
+      <!-- Sets -->
       <div>
         <div class="quick-reg-sets-header">
           <div></div>
           <div class="quick-reg-sets-label">Reps</div>
-          <div class="quick-reg-sets-label">Kg</div>
+          <div class="quick-reg-sets-label" id="qr-kg-label">Kg</div>
           <div class="quick-reg-sets-label">RPE</div>
         </div>
         <div id="qr-sets-container" style="display:flex;flex-direction:column;gap:0.4rem;margin-top:0.4rem"></div>
@@ -1682,8 +1689,9 @@ canvas#progChart { width: 100% !important; height: 180px !important; }
 // ═══════════════════════════════════════
 // ESTADO GLOBAL
 // ═══════════════════════════════════════
-let apiKey = '';
-let conversationHistory = [];
+// var (no let) para que el test runner pueda acceder/modificar via win.apiKey, win.conversationHistory desde el iframe
+var apiKey = '';
+var conversationHistory = [];
 let chartInstance = null;
 
 // Rotación de días
@@ -1932,7 +1940,7 @@ const MODELOS_FALLBACK_DEMANDA = [
   'gemini-3-flash-preview',     // Último recurso preview
 ];
 
-let MODELO = '';
+var MODELO = '';
 let modeloActivo = '';
 // Modelos con alta demanda en esta sesión (no persistir — se resetea al recargar)
 const modelosDemandaAlta = new Set();
@@ -2322,20 +2330,38 @@ async function sendMessage() {
         // Para mostrar opción de cierre cuando el usuario confirme
         const matchUltimoEj = replyFinal.match(/Ej\s*N[°o]?\s*(\d+)\/(\d+)/i);
         if (matchUltimoEj && matchUltimoEj[1] === matchUltimoEj[2]) {
-          // Es el último ejercicio — marcar para trigger de cierre
+          // Es el último ejercicio en la respuesta actual — marcar para trigger de cierre
           localStorage.setItem('gymcoach_ultimo_ejercicio_pendiente', 'true');
+        } else if (esConfirmacionDeEjercicio(text) && !localStorage.getItem('gymcoach_ultimo_ejercicio_pendiente')) {
+          // El usuario confirmó — verificar si el ejercicio en el history era el último
+          const mensajesCoachHist = conversationHistory
+            .filter(m => m.role === 'model')
+            .map(m => m.parts[0]?.text || '');
+          for (let i = mensajesCoachHist.length - 1; i >= Math.max(0, mensajesCoachHist.length - 3); i--) {
+            const mH = mensajesCoachHist[i].match(/Ej\s*N[°o]?\s*(\d+)\/(\d+)/i);
+            if (mH && mH[1] === mH[2]) {
+              localStorage.setItem('gymcoach_ultimo_ejercicio_pendiente', 'true');
+              break;
+            }
+          }
         }
 
-        // Registro rápido: si el usuario confirmó que terminó y el coach anterior tenía un ejercicio
+        // Registro rápido: si el usuario confirmó que terminó Y el coach anterior tenía Ej N°X/Y
         if (sesionActiva && esConfirmacionDeEjercicio(text)) {
-          // Buscar el ejercicio en los últimos mensajes del coach (el mensaje anterior al actual)
+          // Solo mirar el penúltimo mensaje del coach (el que presentó el ejercicio actual)
+          // conversationHistory ya tiene el nuevo mensaje del coach al final
           const mensajesCoach = conversationHistory
             .filter(m => m.role === 'model')
             .map(m => m.parts[0]?.text || '');
-          // Buscar desde el último mensaje hacia atrás
+          // El penúltimo es el que presentó el ejercicio (el último es la respuesta al "Listo")
+          // Si el coach respondió al "Listo" con feedback sin ejercicio, buscar el anterior
           let ejData = null;
-          for (let i = mensajesCoach.length - 1; i >= 0 && !ejData; i--) {
-            ejData = parsearMensajeCoach(mensajesCoach[i]);
+          for (let i = mensajesCoach.length - 1; i >= Math.max(0, mensajesCoach.length - 3) && !ejData; i--) {
+            const msg = mensajesCoach[i];
+            // Solo parsear si el mensaje tiene formato Ej N°X/Y explícito
+            if (/Ej\s*N[°o]?\s*\d+\/\d+/i.test(msg)) {
+              ejData = parsearMensajeCoach(msg);
+            }
           }
           if (ejData) {
             setTimeout(() => abrirQuickReg(ejData, getDiaActual()), 600);
@@ -2345,7 +2371,7 @@ async function sendMessage() {
           const ultimoPendiente = localStorage.getItem('gymcoach_ultimo_ejercicio_pendiente');
           if (ultimoPendiente === 'true') {
             localStorage.removeItem('gymcoach_ultimo_ejercicio_pendiente');
-            const delay = ejData ? 2000 : 800;
+            const delay = ejData ? 2500 : 800;
             setTimeout(() => mostrarOpcionesCierre(), delay);
           }
         }
@@ -2398,7 +2424,7 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-let sesionActiva = false;
+var sesionActiva = false;
 
 function activarSesion() {
   if (sesionActiva) return;
@@ -2591,7 +2617,7 @@ function checkBackupAlert() {
 // ═══════════════════════════════════════
 // REGISTRO
 // ═══════════════════════════════════════
-let setsData = [];
+var setsData = [];
 
 function renderSetsUI(n) {
   // Preservar valores existentes al agregar sets
@@ -3118,9 +3144,9 @@ function iniciarApp() {
 // ═══════════════════════════════════════
 
 // Estado del registro rápido
-let qrSetsData = [];       // sets del modal rápido
-let qrEjercicioActual = ''; // ejercicio parseado del mensaje del coach
-let qrDiaActual = '';      // día actual de entrenamiento
+var qrSetsData = [];       // sets del modal rápido
+var qrEjercicioActual = ''; // ejercicio parseado del mensaje del coach
+var qrDiaActual = '';      // día actual de entrenamiento
 let ultimoMensajeCoach = ''; // último mensaje del coach (para parsear)
 
 // ── Parser del mensaje del coach ──
@@ -3145,9 +3171,17 @@ function parsearMensajeCoach(texto) {
     // Usar el valor medio del rango como sugerencia
     const repsSugeridas = Math.round((repsMin + repsMax) / 2);
 
-    // Parsear kg
+    // Parsear kg — manejar peso corporal y sin peso
+    const esPesoCorporal = /peso\s*corp/i.test(pesoStr) || /pc/i.test(pesoStr) || /bodyweight/i.test(pesoStr) || /sin\s*peso/i.test(pesoStr);
     const matchKg = pesoStr.match(/([\d.]+)\s*kg/i);
     const kg = matchKg ? parseFloat(matchKg[1]) : 0;
+
+    // Parsear serie de aproximación desde el texto completo
+    const matchAprox = texto.split(String.fromCharCode(10)).map(l=>l.trim()).find(l=>/Serie.*aproximaci/i.test(l));
+    const aproximacion = matchAprox ? matchAprox.replace(/.*:/,"").trim() : null;
+    const tieneAprox = aproximacion && !aproximacion.toLowerCase().includes('no requerida');
+
+    const pesoLabel = esPesoCorporal ? 'Peso corporal' : (kg > 0 ? kg+'kg' : 'sin peso');
 
     return {
       nombre,
@@ -3156,7 +3190,10 @@ function parsearMensajeCoach(texto) {
       repsMax,
       repsSugeridas,
       kg,
-      sugeridoTexto: `${series}×${repsMin}${repsMax !== repsMin ? '-'+repsMax : ''} · ${kg > 0 ? kg+'kg' : 'sin peso'}`,
+      esPesoCorporal,
+      aproximacion,
+      tieneAprox,
+      sugeridoTexto: `${series}×${repsMin}${repsMax !== repsMin ? '-'+repsMax : ''} · ${pesoLabel}`,
     };
   }
   return null;
@@ -3165,9 +3202,11 @@ function parsearMensajeCoach(texto) {
 // ── Detectar si el usuario confirmó que terminó un ejercicio ──
 function esConfirmacionDeEjercicio(texto) {
   const t = texto.toLowerCase().trim();
-  const triggers = ['listo', 'ok', 'ok listo', 'hecho', 'listo ✓', 'terminé el ejercicio',
-                    'listo para el siguiente', 'ok terminé', 'terminé', 'ok, listo'];
-  return triggers.some(tr => t === tr || t.startsWith(tr));
+  // Solo coincidencias exactas — evitar falsos positivos como 'Listo el calentamiento'
+  const exactos = ['listo', 'ok', 'ok listo', 'hecho', 'listo ✓', 'terminé el ejercicio',
+                   'listo para el siguiente', 'ok terminé', 'terminé', 'ok, listo',
+                   'listo!', 'ok!', 'terminé!', 'hecho!'];
+  return exactos.includes(t) || exactos.some(tr => t === tr + '.' || t === tr + '!');
 }
 
 // ── Abrir el modal con datos del ejercicio actual ──
@@ -3182,10 +3221,26 @@ function abrirQuickReg(ejercicioData, dia) {
   // Inicializar sets con valores sugeridos
   qrSetsData = Array.from({ length: ejercicioData.series }, () => ({
     reps: String(ejercicioData.repsSugeridas),
-    kg: ejercicioData.kg > 0 ? String(ejercicioData.kg) : '',
+    kg: ejercicioData.esPesoCorporal ? '0' : (ejercicioData.kg > 0 ? String(ejercicioData.kg) : ''),
     rpe: '',
   }));
   qrRenderSets();
+
+  // Mostrar/ocultar sección de aproximación
+  const aproxSection = document.getElementById('qr-aprox-section');
+  const aproxTexto = document.getElementById('qr-aprox-texto');
+  if (aproxSection && aproxTexto) {
+    if (ejercicioData.tieneAprox) {
+      aproxTexto.textContent = ejercicioData.aproximacion;
+      aproxSection.style.display = 'flex';
+    } else {
+      aproxSection.style.display = 'none';
+    }
+  }
+
+  // Si es peso corporal, cambiar label del campo kg
+  const kgLabel = document.getElementById('qr-kg-label');
+  if (kgLabel) kgLabel.textContent = ejercicioData.esPesoCorporal ? 'Kg extra' : 'Kg';
 
   // Limpiar notas
   document.getElementById('qr-notas').value = '';
@@ -3221,12 +3276,18 @@ function qrAddSet() {
 function qrGuardar() {
   if (!qrEjercicioActual) { cerrarQuickReg(); return; }
 
+  // Para peso corporal (kg=0 o vacío), permitir guardar igual
+  const esPesoCorporal = document.getElementById('qr-kg-label')?.textContent === 'Kg extra';
   const sets = qrSetsData
-    .filter(s => s.reps && s.kg)
-    .map(s => ({ reps: s.reps, kg: s.kg, ...(s.rpe ? { rpe: s.rpe } : {}) }));
+    .filter(s => s.reps && (s.kg || esPesoCorporal))
+    .map(s => ({
+      reps: s.reps,
+      kg: s.kg || '0',
+      ...(s.rpe ? { rpe: s.rpe } : {})
+    }));
 
   if (sets.length === 0) {
-    showToast('Ingresá al menos 1 set con reps y kg');
+    showToast('Ingresá al menos 1 set con reps');
     return;
   }
 
