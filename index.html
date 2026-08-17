@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GymCoach JM">
@@ -74,8 +74,21 @@
         <label class="field-label" for="config-api-key">API Key de Gemini</label>
         <input class="api-input" type="password" id="config-api-key" placeholder="AIzaSy..." style="margin-top:0.4rem">
       </div>
-      <button class="btn-primary" onclick="guardarConfig()">Guardar y recargar</button>
+      <div>
+        <label class="field-label" for="config-modelo">Modelo</label>
+        <input class="api-input" type="text" id="config-modelo" list="modelos-sugeridos"
+          placeholder="gemini-2.5-flash" style="margin-top:0.4rem" autocomplete="off" spellcheck="false">
+        <datalist id="modelos-sugeridos">
+          <option value="gemini-2.5-flash"></option>
+          <option value="gemini-flash-latest"></option>
+          <option value="gemini-2.5-flash-lite"></option>
+          <option value="gemini-2.5-pro"></option>
+        </datalist>
+        <div class="config-hint">Si Google da de baja el modelo, cambialo acá sin tocar el código.</div>
+      </div>
+      <button class="btn-primary" onclick="guardarConfig()">Guardar configuración</button>
       <button class="btn-secondary" onclick="exportarHistorial()">Exportar historial ahora</button>
+      <button class="btn-secondary" onclick="borrarConversacion()">Reiniciar conversación</button>
     </div>
   </div>
 
@@ -107,25 +120,23 @@
       <button class="quick-btn" onclick="sendQuick('No pude mantener la excéntrica de 3s')">⏱ Perdí tempo</button>
     </div>
 
-    <div class="descanso-card" id="descanso-card" aria-label="Protocolo de descanso activo">
-      <div class="descanso-titulo">Protocolo de descanso activo</div>
-      <div class="descanso-items">
-        <div class="descanso-item">
-          <span class="descanso-label">Entre series reales</span>
-          <span class="descanso-valor" id="desc-series">2–3 min</span>
+    <div class="descanso-card" id="descanso-card" aria-label="Timer de descanso">
+      <div class="descanso-titulo">Descanso entre series</div>
+
+      <div class="timer-row">
+        <div class="timer-display" id="timer-display" role="timer" aria-live="off"
+          aria-label="Tiempo de descanso restante">00:00</div>
+        <div class="timer-controls">
+          <button class="timer-btn" id="timer-toggle" onclick="toggleTimer()">▶ Iniciar</button>
+          <button class="timer-btn ghost" onclick="resetTimer()" aria-label="Reiniciar timer">↺</button>
         </div>
-        <div class="descanso-item">
-          <span class="descanso-label">Compuestos pesados</span>
-          <span class="descanso-valor">3 min</span>
-        </div>
-        <div class="descanso-item">
-          <span class="descanso-label">Aproximaciones</span>
-          <span class="descanso-valor">60 seg</span>
-        </div>
-        <div class="descanso-item">
-          <span class="descanso-label">Aislamiento</span>
-          <span class="descanso-valor">1–2 min</span>
-        </div>
+      </div>
+
+      <div class="timer-presets" role="group" aria-label="Duración del descanso">
+        <button class="preset-btn" onclick="iniciarTimer(60)">60s<span>aproximación</span></button>
+        <button class="preset-btn" onclick="iniciarTimer(90)">1:30<span>aislamiento</span></button>
+        <button class="preset-btn" onclick="iniciarTimer(120)">2:00<span>serie real</span></button>
+        <button class="preset-btn" onclick="iniciarTimer(180)">3:00<span>compuesto</span></button>
       </div>
     </div>
 
